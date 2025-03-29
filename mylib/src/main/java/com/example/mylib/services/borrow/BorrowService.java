@@ -1,4 +1,4 @@
-package com.example.mylib.services.Reservation;
+package com.example.mylib.services.borrow;
 
 import com.example.mylib.dto.BorrowRecordDTO;
 import com.example.mylib.entities.BorrowRecord;
@@ -23,9 +23,24 @@ public interface BorrowService {
     // Both User and Admin can see borrow history of a specific user
     List<BorrowRecord> getBorrowHistory(Long userId); // User & Admin
 
+    // Get active borrows for a specific user (User & Admin)
+    List<BorrowRecord> getActiveBorrows(Long userId); // User & Admin
+
     // Only Admin can see all borrow records in the library
     public List<BorrowRecordDTO> getAllBorrows(); // Admin
 
     // Get a specific borrow record (for both User & Admin)
     BorrowRecord getBorrowRecordById(Long borrowRecordId); // User & Admin
+
+    // Get borrow history for a specific book (Admin only)
+    List<BorrowRecord> getBookBorrowHistory(Long bookId); // Admin
+
+    // Cancel a borrow request
+    void cancelBorrowRequest(Long borrowRequestId);
+
+    // Cancel a return request
+    void cancelReturnRequest(Long borrowRecordId);
+
+    // Update a borrow record
+    BorrowRecord updateBorrowRecord(Long borrowRecordId, BorrowRecordDTO updateData);
 }

@@ -1,10 +1,11 @@
-package com.example.mylib.controllers;
+package com.example.mylib.controllers.admin;
 
 import com.example.mylib.dto.UserDTO;
 import com.example.mylib.services.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -12,22 +13,12 @@ import java.util.List;
 @RequestMapping("/admin")
 public class AdminController {
 
-
     @Autowired
     private UserServiceImpl userService;
 
     @GetMapping("/users")
-    public ResponseEntity<?> getUsers(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getUsers() {
         try {
-            // You can use the JWT service to validate the token before fetching users
-            System.out.println("JWT Token: "+token);
-            if (token == null || !token.startsWith("Bearer ")) {
-                return ResponseEntity.status(401).body("Unauthorized: No token provided");
-            }
-
-            String jwtToken = token.substring(7); // Extract the token
-
-
             List<UserDTO> users = userService.getAllUsersDTO();
             return ResponseEntity.ok(users);  // Return 200 OK with the list of users
         } catch (Exception e) {
@@ -35,6 +26,15 @@ public class AdminController {
         }
     }
 
-
-
+    @PostMapping("/users/{userId}/profile-image")
+    public ResponseEntity<?> uploadProfileImage(
+            @PathVariable Long userId,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = userService.uploadProfileImage(file, userId);
+            return ResponseEntity.ok(fileUrl);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error uploading profile image: " + e.getMessage());
+        }
+    }
 }

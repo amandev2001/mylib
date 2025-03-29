@@ -1,4 +1,4 @@
-package com.example.mylib.entities;
+package com.example.mylib.enums;
 
 public enum Providers {
     SELF,GOOGLE,GITHUB

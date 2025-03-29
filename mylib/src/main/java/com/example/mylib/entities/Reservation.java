@@ -1,11 +1,18 @@
 package com.example.mylib.entities;
 
+import com.example.mylib.enums.ReservationType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "book_reservation")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Reservation {
 
     @Id
@@ -21,8 +28,17 @@ public class Reservation {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
-    @Enumerated(value = EnumType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20)
     private ReservationType status;
 
     private Integer reservations;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt; // Timestamp for FIFO or Queue
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

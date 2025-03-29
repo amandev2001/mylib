@@ -1,6 +1,6 @@
 package com.example.mylib.dto;
 
-import com.example.mylib.entities.ReservationType;
+import com.example.mylib.enums.ReservationType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

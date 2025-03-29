@@ -1,14 +1,16 @@
 package com.example.mylib.entities;
 
+import com.example.mylib.enums.Providers;
 import com.example.mylib.payload.AppConstants;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 
 @Entity
@@ -21,7 +23,7 @@ public class Users {
     @Id
     @Column(name = "user_id", length = 36, updatable = false, nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id ;
+    private Long id;
 
     @Column(name = "user_email")
     private String email;
@@ -35,15 +37,16 @@ public class Users {
 
     private String profilePic = "static/images/default.png";
 
-    private String PhoneNumber;
+    private String phoneNumber;
 
-    private boolean enabled = false;
+    private boolean enabled = true;
 
     private String emailToken;
     private boolean emailVerified=false;
     private boolean phoneVerified=false;
 
     @ElementCollection(fetch = FetchType.EAGER)
+    @ToString.Exclude
     private List<String> roleList = new ArrayList<>();
 
     @Enumerated(value = EnumType.STRING)
@@ -51,11 +54,13 @@ public class Users {
 
     private String providerId;
 
-    @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private List<BorrowRecord> borrowRecords = new ArrayList<>();
 
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
 
     public boolean canReserve() {
