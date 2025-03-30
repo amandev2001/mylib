@@ -10,6 +10,7 @@ import com.example.mylib.entities.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -198,11 +199,14 @@ public class UserController {
     public ResponseEntity<?> updateUserDetails(@PathVariable Long userId, @RequestBody Users userData) {
         try {
             logger.info("Updating user details for userId: {}", userId);
-            
+
             // Check if user exists
             Users existingUser = userService.getUserById(userId.toString())
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-            
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+            // Check if email is updated
+            boolean emailChanged = !existingUser.getEmail().equals(userData.getEmail());
+
             // Update fields
             existingUser.setName(userData.getName());
             existingUser.setEmail(userData.getEmail());
@@ -210,22 +214,35 @@ public class UserController {
             existingUser.setAbout(userData.getAbout());
             existingUser.setEnabled(userData.isEnabled());
             existingUser.setRoleList(userData.getRoleList());
-            
-            // Save profile image if provided in the userData
+
+            // Save profile image if provided
             if (userData.getProfilePic() != null && !userData.getProfilePic().equals(existingUser.getProfilePic())) {
                 existingUser.setProfilePic(userData.getProfilePic());
             }
-            
+
             // Save the updated user
             Users updatedUser = userService.saveUser(existingUser);
-            
-            return ResponseEntity.ok(updatedUser);
+
+            // Generate a new JWT token if email was changed
+            String newJwtToken = null;
+            if (emailChanged) {
+                newJwtToken = jwtService.generateToken(updatedUser.getEmail()); // Generate new JWT token
+            }
+
+            // Build response
+            ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+            if (newJwtToken != null) {
+                response.header(HttpHeaders.AUTHORIZATION, "Bearer " + newJwtToken);
+            }
+
+            return response.body(updatedUser);
         } catch (Exception e) {
             logger.error("Failed to update user details for ID: " + userId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Failed to update user: " + e.getMessage());
+                    .body("Failed to update user: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/test-password")
     public ResponseEntity<?> testPasswordEncoding(@RequestParam String rawPassword) {
@@ -417,6 +434,35 @@ public class UserController {
                 .body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/current")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication){
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User is not authenticated"));
+        }
+        String email = authentication.getName();
+        Optional<Users> userOptional = userService.getUserByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found"));
+        }
+        Users user = userOptional.get();
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setName(user.getName());
+        userDTO.setPhoneNumber(user.getPhoneNumber());
+        userDTO.setRoleList(user.getRoleList());
+        userDTO.setProfilePic(user.getProfilePic());
+        userDTO.setEnabled(user.isEnabled());
+
+        return ResponseEntity.ok(userDTO);
+    }
+
 }
+
+
 
 

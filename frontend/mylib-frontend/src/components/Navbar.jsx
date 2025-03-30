@@ -178,9 +178,9 @@ function Navbar() {
               <NavLink to="/profile" icon={UserCircleIcon}>
                 Profile
               </NavLink>
-              <NavLink to="/notifications" icon={BellIcon}>
+              {/* <NavLink to="/notifications" icon={BellIcon}>
                 Notifications
-              </NavLink>
+              </NavLink> */}
             </div>
           </div>
 

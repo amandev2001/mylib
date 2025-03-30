@@ -23,6 +23,10 @@ import RoleManagement from './components/RoleManagement';
 import Header from './components/Header';
 import ManageBooks from './components/admin/ManageBooks';
 import FineManagement from './components/admin/FineManagement';
+import Profile from './pages/Profile';
+import Help from './pages/Help';
+import Support from './pages/Support';
+import Settings from './pages/Settings';
 
 // Layout wrapper component
 const Layout = ({ children }) => (
@@ -101,15 +105,15 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* <Route path="/profile" element={
+            <Route path="/profile" element={
               <ProtectedRoute>
                 <Layout>
                   <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
-                    <Profile/>
+                    <Profile />
                   </main>
                 </Layout>
               </ProtectedRoute>
-            } /> */}
+            } />
             
             <Route path="/loans" element={
               <ProtectedRoute>
@@ -196,6 +200,37 @@ function App() {
                 <Layout>
                   <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
                     <FinesAndPayments />
+                  </main>
+                </Layout>
+              </RoleProtectedRoute>
+            } />
+
+            {/* Updated Help and Support routes to use Layout */}
+            <Route path="/help" element={
+              <ProtectedRoute>
+                <Layout>
+                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                    <Help />
+                  </main>
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/support" element={
+              <ProtectedRoute>
+                <Layout>
+                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                    <Support />
+                  </main>
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/settings" element={
+              <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                <Layout>
+                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                    <Settings />
                   </main>
                 </Layout>
               </RoleProtectedRoute>

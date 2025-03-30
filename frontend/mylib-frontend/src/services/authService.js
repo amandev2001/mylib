@@ -62,12 +62,12 @@ export const authService = {
     }
   },
 
-  refreshToken: async () => {
+  refreshAuthToken: async () => {
     try {
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) throw new Error('No token available for refresh');
 
-      const response = await api.post('/refresh-token', null, {
+      const response = await api.post('/api/users/refresh-token', null, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -75,7 +75,8 @@ export const authService = {
         const newToken = response.data.token;
         localStorage.setItem(TOKEN_KEY, newToken);
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-        return response;
+        console.log('Token successfully refreshed:', newToken);
+        return newToken;
       }
 
       throw new Error('Invalid refresh token response');

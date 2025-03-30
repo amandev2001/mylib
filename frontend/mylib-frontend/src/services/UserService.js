@@ -16,8 +16,15 @@ export const userService = {
 
   updateUser: async (id, userData) => {
     const response = await api.put(`/api/users/${id}`, userData);
+    
+    // Check if the response contains a new token
+    const newToken = response.headers["authorization"];
+    if (newToken) {
+        localStorage.setItem("token", newToken.split(" ")[1]); // Update token
+    }
+
     return response.data;
-  },
+},
 
   deleteUser: async (id) => {
     const response = await api.delete(`/api/users/${id}`);

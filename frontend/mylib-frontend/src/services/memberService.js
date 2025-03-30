@@ -45,5 +45,11 @@ export const memberService = {
       }
     });
     return response.data;
+  },
+
+  getCurrentMember: async () => {
+    
+    const response = await api.get('/api/users/current');
+    return response.data;
   }
-}; 
+};

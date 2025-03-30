@@ -5,7 +5,14 @@ import { ROLES } from '../utils/roleUtils';
 
 const DEFAULT_PROFILE = '/book-covers/fiction-default.jpg.webp';
 
-const MemberEditForm = ({ member, onSave, onCancel, isDarkMode }) => {
+const MemberEditForm = ({ 
+  member, 
+  onSave, 
+  onCancel, 
+  isDarkMode,
+  isProfile = false,
+  userRoles = [] 
+}) => {
   const [formData, setFormData] = useState({
     id: member.id,
     name: member.name || '',
@@ -207,52 +214,54 @@ const MemberEditForm = ({ member, onSave, onCancel, isDarkMode }) => {
           </div>
           
           {/* Status */}
-          <div className="mb-2">
-            <div className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-              Account Status
-            </div>
-            <div className="flex items-center mt-2 p-2">
-              <div className="relative inline-block w-12 mr-2 align-middle select-none">
-                <input
-                  type="checkbox"
-                  name="enabled"
-                  id="toggle"
-                  checked={formData.enabled}
-                  onChange={handleChange}
-                  className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer focus:outline-none transition-transform duration-200 ease-in-out"
-                  style={{
-                    transform: formData.enabled ? 'translateX(100%)' : 'translateX(0)',
-                    borderColor: formData.enabled 
-                      ? isDarkMode ? '#4ADE80' : '#10B981' 
-                      : isDarkMode ? '#EF4444' : '#F87171'
-                  }}
-                />
-                <label
-                  htmlFor="toggle"
-                  className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-                    formData.enabled 
-                      ? isDarkMode ? 'bg-green-900' : 'bg-green-500' 
-                      : isDarkMode ? 'bg-red-900' : 'bg-red-500'
-                  }`}
-                />
+          {!isProfile && userRoles.includes('ROLE_ADMIN') && (
+            <div className="mb-2">
+              <div className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                Account Status
               </div>
-              <span className={`ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {formData.enabled ? 'Active' : 'Inactive'}
-              </span>
-              <span className={`px-3 py-1 ml-3 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                formData.enabled 
-                  ? isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
-                  : isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'
-              }`}>
-                {formData.enabled ? 'Active' : 'Inactive'}
-              </span>
+              <div className="flex items-center mt-2 p-2">
+                <div className="relative inline-block w-12 mr-2 align-middle select-none">
+                  <input
+                    type="checkbox"
+                    name="enabled"
+                    id="toggle"
+                    checked={formData.enabled}
+                    onChange={handleChange}
+                    className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer focus:outline-none transition-transform duration-200 ease-in-out"
+                    style={{
+                      transform: formData.enabled ? 'translateX(100%)' : 'translateX(0)',
+                      borderColor: formData.enabled 
+                        ? isDarkMode ? '#4ADE80' : '#10B981' 
+                        : isDarkMode ? '#EF4444' : '#F87171'
+                    }}
+                  />
+                  <label
+                    htmlFor="toggle"
+                    className={`block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
+                      formData.enabled 
+                        ? isDarkMode ? 'bg-green-900' : 'bg-green-500' 
+                        : isDarkMode ? 'bg-red-900' : 'bg-red-500'
+                    }`}
+                  />
+                </div>
+                <span className={`ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {formData.enabled ? 'Active' : 'Inactive'}
+                </span>
+                <span className={`px-3 py-1 ml-3 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                  formData.enabled 
+                    ? isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
+                    : isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'
+                }`}>
+                  {formData.enabled ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {formData.enabled 
+                  ? 'User can login and access the system.' 
+                  : 'User cannot login or access the system.'}
+              </p>
             </div>
-            <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {formData.enabled 
-                ? 'User can login and access the system.' 
-                : 'User cannot login or access the system.'}
-            </p>
-          </div>
+          )}
         </div>
       </div>
       
@@ -276,52 +285,54 @@ const MemberEditForm = ({ member, onSave, onCancel, isDarkMode }) => {
       </div>
       
       {/* User Roles */}
-      <div className="col-span-1 md:col-span-2 mb-4">
-        <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-          User Roles
-        </label>
-        <div className="flex flex-wrap gap-2 p-2">
-          {availableRoles.map(role => {
-            const isActive = formData.roleList.includes(role);
-            const roleLabel = role.replace('ROLE_', '');
-            
-            let bgColor, textColor;
-            if (role === 'ROLE_ADMIN') {
-              bgColor = isActive 
-                ? isDarkMode ? 'bg-indigo-800' : 'bg-indigo-600' 
-                : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
-              textColor = isActive 
-                ? 'text-white' 
-                : isDarkMode ? 'text-gray-300' : 'text-gray-700';
-            } else if (role === 'ROLE_LIBRARIAN') {
-              bgColor = isActive 
-                ? isDarkMode ? 'bg-blue-800' : 'bg-blue-600' 
-                : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
-              textColor = isActive 
-                ? 'text-white' 
-                : isDarkMode ? 'text-gray-300' : 'text-gray-700';
-            } else {
-              bgColor = isActive 
-                ? isDarkMode ? 'bg-green-800' : 'bg-green-600' 
-                : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
-              textColor = isActive 
-                ? 'text-white' 
-                : isDarkMode ? 'text-gray-300' : 'text-gray-700';
-            }
-            
-            return (
-              <button
-                key={role}
-                type="button"
-                onClick={() => handleRoleToggle(role)}
-                className={`px-3 py-1 rounded-full text-sm font-medium ${bgColor} ${textColor} transition-colors duration-150`}
-              >
-                {roleLabel}
-              </button>
-            );
-          })}
+      {!isProfile && userRoles.includes('ROLE_ADMIN') && (
+        <div className="col-span-1 md:col-span-2 mb-4">
+          <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+            User Roles
+          </label>
+          <div className="flex flex-wrap gap-2 p-2">
+            {availableRoles.map(role => {
+              const isActive = formData.roleList.includes(role);
+              const roleLabel = role.replace('ROLE_', '');
+              
+              let bgColor, textColor;
+              if (role === 'ROLE_ADMIN') {
+                bgColor = isActive 
+                  ? isDarkMode ? 'bg-indigo-800' : 'bg-indigo-600' 
+                  : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
+                textColor = isActive 
+                  ? 'text-white' 
+                  : isDarkMode ? 'text-gray-300' : 'text-gray-700';
+              } else if (role === 'ROLE_LIBRARIAN') {
+                bgColor = isActive 
+                  ? isDarkMode ? 'bg-blue-800' : 'bg-blue-600' 
+                  : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
+                textColor = isActive 
+                  ? 'text-white' 
+                  : isDarkMode ? 'text-gray-300' : 'text-gray-700';
+              } else {
+                bgColor = isActive 
+                  ? isDarkMode ? 'bg-green-800' : 'bg-green-600' 
+                  : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
+                textColor = isActive 
+                  ? 'text-white' 
+                  : isDarkMode ? 'text-gray-300' : 'text-gray-700';
+              }
+              
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => handleRoleToggle(role)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${bgColor} ${textColor} transition-colors duration-150`}
+                >
+                  {roleLabel}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Action Buttons */}
       <div className="flex justify-end space-x-4 pt-4 mt-6 border-t border-gray-200 dark:border-gray-700">
@@ -348,4 +359,4 @@ const MemberEditForm = ({ member, onSave, onCancel, isDarkMode }) => {
   );
 };
 
-export default MemberEditForm; 
+export default MemberEditForm;
