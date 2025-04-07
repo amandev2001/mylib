@@ -70,12 +70,13 @@ const BorrowManagement = () => {
 
   const fetchBorrows = async () => {
     try {
-      // Debug: Log request headers
       const token = authService.getCurrentToken();
       console.log('Making request with token:', token);
       
       const response = await api.get('/borrow/admin/all');
-      setBorrows(response.data);
+      // Sort borrows by id in descending order (newest first)
+      const sortedBorrows = response.data.sort((a, b) => b.id - a.id);
+      setBorrows(sortedBorrows);
       setError(null);
       setSuccess(null);
     } catch (err) {
@@ -222,4 +223,4 @@ const BorrowManagement = () => {
   );
 };
 
-export default BorrowManagement; 
+export default BorrowManagement;

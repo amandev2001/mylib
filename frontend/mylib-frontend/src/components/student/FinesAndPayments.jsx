@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { authService } from '../../services/authService';
+import { formatDate } from '../../utils/dateExtensions';
 
 export default function FinesAndPayments() {
   const { isDarkMode } = useDarkMode();
@@ -205,9 +206,7 @@ export default function FinesAndPayments() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                        {new Date(fine.dueDate).toLocaleDateString()}
-                      </div>
+                      {formatDate(fine.dueDate)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -327,4 +326,4 @@ export default function FinesAndPayments() {
       </div>
     </div>
   );
-} 
+}

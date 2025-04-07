@@ -9,6 +9,7 @@ import {
   BookOpenIcon
 } from '@heroicons/react/24/outline';
 import { useDarkMode } from '../../context/DarkModeContext';
+import { formatDate } from '../../utils/dateExtensions';
 
 export default function FineManagement() {
   const { isDarkMode } = useDarkMode();
@@ -261,7 +262,7 @@ export default function FineManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                      {new Date(fine.dueDate).toLocaleDateString()}
+                      {formatDate(fine.dueDate)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -289,4 +290,4 @@ export default function FineManagement() {
       </div>
     </div>
   );
-} 
+}

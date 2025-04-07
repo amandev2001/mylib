@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Switch } from '@headlessui/react';
 import { memberService } from '../services/memberService';
 import { useDarkMode } from '../context/DarkModeContext';
 import MemberEditForm from '../components/MemberEditForm';
@@ -63,6 +64,22 @@ function Members() {
   const handleDetailsClick = (member) => {
     setSelectedMember(member);
     setIsDetailsModalOpen(true);
+  };
+
+  const handleToggleStatus = async (member) => {
+    try {
+      const updatedMember = await memberService.updateMember(member.id, {
+        ...member,
+        enabled: !member.enabled
+      });
+      
+      setMembers(members.map(m => 
+        m.id === member.id ? updatedMember : m
+      ));
+    } catch (err) {
+      console.error('Error updating member status:', err);
+      alert('Failed to update member status. Please try again.');
+    }
   };
 
   const handleImageError = (e) => {
@@ -169,13 +186,31 @@ function Members() {
                     {member.phoneNumber}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      member.enabled 
-                        ? isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
-                        : isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {member.enabled ? 'Active' : 'Inactive'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={member.enabled}
+                        onChange={() => handleToggleStatus(member)}
+                        className={`${
+                          member.enabled 
+                            ? isDarkMode ? 'bg-green-900' : 'bg-green-600'
+                            : isDarkMode ? 'bg-red-900' : 'bg-red-600'
+                        } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
+                      >
+                        <span className="sr-only">Enable user</span>
+                        <span
+                          className={`${
+                            member.enabled ? 'translate-x-6' : 'translate-x-1'
+                          } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                        />
+                      </Switch>
+                      <span className={`text-xs font-semibold ${
+                        member.enabled 
+                          ? isDarkMode ? 'text-green-400' : 'text-green-700'
+                          : isDarkMode ? 'text-red-400' : 'text-red-700'
+                      }`}>
+                        {member.enabled ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
@@ -240,4 +275,4 @@ function Members() {
   );
 }
 
-export default Members; 
+export default Members;

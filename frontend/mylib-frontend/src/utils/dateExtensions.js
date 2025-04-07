@@ -142,4 +142,20 @@ Date.prototype.toIndianDateTime = function() {
   const hours = String(this.getHours()).padStart(2, '0');
   const minutes = String(this.getMinutes()).padStart(2, '0');
   return `${day}/${month}/${year} ${hours}:${minutes}`;
-}; 
+};
+
+// Create a custom hook for date formatting
+import { useMemo } from 'react';
+
+export const useDateFormatter = (dateString, format = 'date') => {
+  return useMemo(() => {
+    switch (format) {
+      case 'datetime':
+        return formatDateTime(dateString);
+      case 'input':
+        return formatDateForInput(dateString);
+      default:
+        return formatDate(dateString);
+    }
+  }, [dateString, format]);
+};

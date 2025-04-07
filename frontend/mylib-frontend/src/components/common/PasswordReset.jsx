@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
-import {
-    Box,
-    Button,
-    TextField,
-    Typography,
-    Paper,
-    CircularProgress,
-    Alert
-} from '@mui/material';
+import { Box, Button, TextField, Typography, Paper, CircularProgress, Alert } from '@mui/material';
+import { authService } from '../../services/authService';
 
 const PasswordReset = () => {
     const [email, setEmail] = useState('');
@@ -22,13 +14,11 @@ const PasswordReset = () => {
         e.preventDefault();
         setError(null);
 
-        // Validate passwords match
         if (newPassword !== confirmPassword) {
             setError('Passwords do not match');
             return;
         }
 
-        // Validate password strength
         if (newPassword.length < 8) {
             setError('Password must be at least 8 characters long');
             return;
@@ -36,24 +26,14 @@ const PasswordReset = () => {
 
         try {
             setLoading(true);
-            const response = await axios.post('/api/users/reset-password', {
-                email,
-                newPassword
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
+            await authService.resetPassword(email, newPassword); // Use authService
             toast.success('Password reset successfully');
-            // Clear form
             setEmail('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (err) {
-            const errorMessage = err.response?.data || 'Failed to reset password';
-            setError(errorMessage);
-            toast.error(errorMessage);
+            setError(err.message);
+            toast.error(err.message);
         } finally {
             setLoading(false);
         }
@@ -84,11 +64,7 @@ const PasswordReset = () => {
                     Reset User Password
                 </Typography>
 
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {error}
-                    </Alert>
-                )}
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
                 <form onSubmit={handleSubmit}>
                     <TextField
@@ -133,11 +109,7 @@ const PasswordReset = () => {
                         disabled={loading}
                         sx={{ mt: 3 }}
                     >
-                        {loading ? (
-                            <CircularProgress size={24} color="inherit" />
-                        ) : (
-                            'Reset Password'
-                        )}
+                        {loading ? <CircularProgress size={24} color="inherit" /> : 'Reset Password'}
                     </Button>
                 </form>
             </Paper>
@@ -145,4 +117,4 @@ const PasswordReset = () => {
     );
 };
 
-export default PasswordReset; 
+export default PasswordReset;

@@ -10,6 +10,8 @@ import BookDetailsModal from '../components/BookDetailsModal';
 import { useDarkMode } from '../context/DarkModeContext';
 import ImagePreview from '../components/common/ImagePreview';
 import { reserveService } from '../services/reserveService';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Default book cover images for different categories
 const DEFAULT_COVERS = {
@@ -134,6 +136,19 @@ function Books() {
       setError('Failed to update book. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (bookId) => {
+    try {
+      await bookService.deleteBook(bookId)
+      setBooks(books.filter(book => book.id !== bookId));
+      setSelectedBook(null); // Clear selected book before closing modal
+      setIsEditModalOpen(false);
+      toast.success('Book deleted successfully');
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete book');
     }
   };
 
@@ -346,73 +361,6 @@ function Books() {
         </div>
       </div>
 
-      {/* Borrow History Section */}
-      {/* <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Your Borrow History</h3>
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className={`flex items-center gap-2 ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-          >
-            {showHistory ? 'Hide History' : 'Show History'}
-          </button>
-        </div>
-        
-        {showHistory && (
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-4`}>
-            {userBorrowHistory.length === 0 ? (
-              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>No borrow history found</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className={`${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-                    <tr>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>Book</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>Status</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>Borrow Date</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>Due Date</th>
-                      <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>Fine</th>
-                    </tr>
-                  </thead>
-                  <tbody className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                    {userBorrowHistory.map((record) => (
-                      <tr key={record.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{record.book.title}</div>
-                          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{record.book.author}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            record.status === 'BORROWED' ? 
-                              isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800' :
-                            record.status === 'RETURNED' ? 
-                              isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800' :
-                            record.status === 'PENDING' ? 
-                              isDarkMode ? 'bg-yellow-900 text-yellow-200' : 'bg-yellow-100 text-yellow-800' :
-                              isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {record.status}
-                          </span>
-                        </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {formatDate(record.issueDate)}
-                        </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {formatDate(record.dueDate)}
-                        </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {record.fineAmount ? `$${record.fineAmount.toFixed(2)}` : '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-      </div> */}
-
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5">
         {books.map((book) => {
           const activeBorrow = activeBorrows.find(borrow => borrow.book.id === book.id);
@@ -581,6 +529,7 @@ function Books() {
           setSelectedBook(null);
         }}
         onSubmit={handleEditBook}
+        onDelete={handleDelete}
         book={selectedBook}
       />
 
@@ -596,4 +545,4 @@ function Books() {
   );
 }
 
-export default Books; 
+export default Books;

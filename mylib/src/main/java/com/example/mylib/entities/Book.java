@@ -22,7 +22,7 @@ public class Book {
     @Id
     @Column(name = "book_id", length = 36, updatable = false, nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id ;
+    private Long id;
 
     @Column(length = 500)
     private String title;
@@ -67,5 +67,9 @@ public class Book {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<BorrowRecord> borrowRecords = new ArrayList<>();
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Reservation> reservations = new ArrayList<>();
 
 }

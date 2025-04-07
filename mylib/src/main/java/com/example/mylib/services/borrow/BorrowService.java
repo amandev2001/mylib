@@ -8,6 +8,7 @@ import java.util.List;
 @Service
 public interface BorrowService {
 
+    boolean isEligibleToBorrow(Long userId, Long bookId);
     // User can request a book, but admin must approve before borrowing
     BorrowRecord requestBorrow(Long userId, Long bookId); // User
 

@@ -16,6 +16,7 @@ import { loanService } from '../../services/loanService';
 import { reserveService } from '../../services/reserveService';
 import { useDarkMode } from '../../context/DarkModeContext';
 import EditBookModal from '../EditBookModal';
+import { formatDateForInput } from '../../utils/dateExtensions';
 
 export default function ManageBooks() {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ export default function ManageBooks() {
       ]);
 
       // Filter active loans (not returned)
-      const activeLoans = allLoans.filter(loan => !loan.returnDate);
+      const activeLoans = allLoans.filter(loan => !loan.returnDate && loan.status === "PENDING");
 
       const categories = new Set(books.map(book => book.category));
 
@@ -350,8 +351,14 @@ export default function ManageBooks() {
           }}
           onSubmit={handleUpdateBook}
           book={selectedBook}
-        />
+        >
+          <input
+            type="date"
+            value={formatDateForInput(selectedBook.publicationDate)}
+            onChange={(e) => handleBookChange('publicationDate', e.target.value)}
+          />
+        </EditBookModal>
       )}
     </div>
   );
-} 
+}

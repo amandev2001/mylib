@@ -96,5 +96,17 @@ public class AdminBookController {
         }
     }
 
+    @DeleteMapping("/delete/{bookId}")
+    public ResponseEntity<?> deleteBook(@PathVariable Long bookId) {
+        try {
+            bookService.deleteBookById(bookId);
+            return ResponseEntity.ok().body(Map.of("message", "Book deleted successfully"));
+        } catch (Exception e) {
+            logger.error("Error deleting book: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while deleting the book: " + e.getMessage());
+        }
+    }
+
     // Book Reservation
 }

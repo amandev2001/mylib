@@ -125,8 +125,7 @@ const RoleManagement = () => {
                           <span
                             key={role}
                             className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              role === 'ROLE_ADMIN' ? 
-                                isDarkMode ? 'bg-indigo-900 text-indigo-200' : 'bg-indigo-100 text-indigo-800' :
+                              role === 'ROLE_ADMIN' ? isDarkMode ? 'bg-indigo-900 text-indigo-200' : 'bg-indigo-100 text-indigo-800' :
                               role === 'ROLE_LIBRARIAN' ? 
                                 isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800' :
                                 isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'

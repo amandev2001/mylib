@@ -94,6 +94,6 @@ public class SecurityConfig {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         System.out.println("Creating BCryptPasswordEncoder with strength 10");
-        return new BCryptPasswordEncoder(10); // Reduced from 12 to 10 for more consistent performance
+        return new BCryptPasswordEncoder(10);
     }
 }

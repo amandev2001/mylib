@@ -39,4 +39,6 @@ public interface UserService {
     List<Users> getAllUsers();
 
     Users updateUserRoles(Long userId, List<String> roles);
+
+    void updateSecurityContext(Users updatedUser);
 }

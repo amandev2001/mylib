@@ -4,6 +4,9 @@ const TOKEN_KEY = 'token';
 const USER_ROLES_KEY = 'user_roles';
 const USER_DATA_KEY = 'user_data';
 
+// Cache the roles to avoid frequent localStorage access
+let cachedRoles = null;
+
 export const authService = {
 
   login: async (credentials) => {
@@ -16,6 +19,7 @@ export const authService = {
       }
 
       const response = await api.post('/api/users/login', credentials);
+
       console.log('Login response:', response);
 
       if (response.data) {
@@ -33,6 +37,9 @@ export const authService = {
 
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         console.log('Authorization header set:', `Bearer ${token}`);
+
+        // Update the roles cache
+        cachedRoles = roles;
 
         const user = { id: userId, email, name, roles };
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
@@ -99,6 +106,8 @@ export const authService = {
     localStorage.removeItem(USER_ROLES_KEY);
     localStorage.removeItem(USER_DATA_KEY);
     delete api.defaults.headers.common['Authorization'];
+    // Clear the cache when logging out
+    cachedRoles = null;
     console.groupEnd();
   },
 
@@ -109,12 +118,18 @@ export const authService = {
   },
 
   getUserRoles: () => {
+    // Return cached roles if available
+    if (cachedRoles) {
+      return cachedRoles;
+    }
+
     const roles = localStorage.getItem(USER_ROLES_KEY);
     console.log('Raw roles from storage:', roles);
     try {
       const parsed = JSON.parse(roles);
+      cachedRoles = Array.isArray(parsed) ? parsed : [];
       console.log('Parsed roles:', parsed, 'Type:', typeof parsed, 'Is Array:', Array.isArray(parsed));
-      return Array.isArray(parsed) ? parsed : [];
+      return cachedRoles;
     } catch (e) {
       console.error('Error parsing roles:', e);
       return [];
@@ -139,7 +154,7 @@ export const authService = {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       console.log('Auth initialized with token:', token);
     } else {
-      console.log('No token found during initialization');
+      console.warn('No token found during initialization');
     }
   },
 
@@ -173,6 +188,18 @@ export const authService = {
       console.error('Error getting user data:', error);
       authService.logout();
       return null;
+    }
+  },
+
+  resetPassword: async (email, newPassword) => {
+    try{
+      const response = await api.post('/api/users/admin/reset-password',{
+        email,
+        newPassword
+      });
+      return response.data;
+    } catch(error) {
+      throw new Error(error.response?.data?.message || 'Failed to reset password');
     }
   }
 };

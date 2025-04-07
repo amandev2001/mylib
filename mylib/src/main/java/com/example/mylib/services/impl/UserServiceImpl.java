@@ -5,16 +5,22 @@ import com.example.mylib.dto.UserRegistrationDto;
 import com.example.mylib.entities.Users;
 import com.example.mylib.payload.AppConstants;
 import com.example.mylib.repository.UserRepo;
+import com.example.mylib.services.User.MyUserDetailsService;
 import com.example.mylib.services.User.UserService;
 import com.example.mylib.services.users.UserImage;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.attribute.UserPrincipal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,6 +29,9 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+
+    @Autowired
+    private MyUserDetailsService myUserDetailsService;
 
     @Autowired
     private UserRepo userRepo;
@@ -152,4 +161,16 @@ public class UserServiceImpl implements UserService {
         user.setRoleList(roles);
         return userRepo.save(user);
     }
+
+    @Override
+    public void updateSecurityContext(Users updatedUser) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.isAuthenticated()) {
+        UserDetails updatedUserDetails = myUserDetailsService.loadUserByUsername(updatedUser.getEmail());
+        UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(
+                updatedUserDetails, authentication.getCredentials(), updatedUserDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
+        logger.info("SecurityContext updated for user: {}", updatedUser.getEmail());
+    }
+}
 }

@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { authService } from './authService';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+console.log("Base URL:", API_BASE_URL); 
+
+
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -96,6 +99,17 @@ api.interceptors.response.use(
   }
 );
 
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 404) {
+      console.error('Resource not found:', error.config.url);
+      // You might want to show a user-friendly message here
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Add a new book
 export const addBook = async (formData) => {
   // Create a new axios instance without default Content-Type header
@@ -126,4 +140,4 @@ export const addBook = async (formData) => {
   return response.data;
 };
 
-export default api; 
+export default api;

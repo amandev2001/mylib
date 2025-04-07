@@ -32,6 +32,15 @@ public class BorrowServiceImpl implements BorrowService {
     private final ModelMapper modelMapper;
 
     @Override
+    public boolean isEligibleToBorrow(Long userId, Long bookId) {
+        List<BorrowRecord> existingRecords = borrowRepo.findByUserIdAndBookId(userId, bookId);
+        return !existingRecords.stream()
+                .anyMatch(record -> record.getStatus() == BorrowStatus.PENDING || 
+                                  record.getStatus() == BorrowStatus.BORROWED || 
+                                  record.getStatus() == BorrowStatus.RETURN_PENDING);
+    }
+
+    @Override
     public BorrowRecord requestBorrow(Long userId, Long bookId) {
         Users user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
@@ -43,14 +52,7 @@ public class BorrowServiceImpl implements BorrowService {
             throw new RuntimeException("Book is out of stock. Consider reserving it.");
         }
 
-        // Check if user already has an active borrow request or borrowed book
-        List<BorrowRecord> existingRecords = borrowRepo.findByUserIdAndBookId(userId, bookId);
-        boolean hasActiveRequest = existingRecords.stream()
-                .anyMatch(record -> record.getStatus() == BorrowStatus.PENDING || 
-                                  record.getStatus() == BorrowStatus.BORROWED || 
-                                  record.getStatus() == BorrowStatus.RETURN_PENDING);
-
-        if (hasActiveRequest) {
+        if (!isEligibleToBorrow(userId, bookId)) {
             throw new RuntimeException("You already have an active request or borrowed this book. Please return it first.");
         }
 

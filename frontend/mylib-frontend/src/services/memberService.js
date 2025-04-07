@@ -1,6 +1,15 @@
 import api from './api';
+import axios from 'axios';
 
 const USERS_URL = '/api/users/all';
+
+const setAuthToken = (token) => {
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete axios.defaults.headers.common['Authorization'];
+  }
+};
 
 export const memberService = {
   getAllMembers: async () => {
@@ -19,8 +28,13 @@ export const memberService = {
   },
 
   updateMember: async (id, memberData) => {
-    const response = await api.put(`/api/users/${id}`, memberData);
-    return response.data;
+    try {
+      const response = await api.put(`/api/users/${id}`, memberData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating member:', error);
+      throw error;
+    }
   },
 
   deleteMember: async (id) => {
@@ -39,17 +53,31 @@ export const memberService = {
   },
 
   uploadProfileImage: async (userId, formData) => {
-    const response = await api.post(`/api/users/${userId}/profile-image`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    try {
+      const response = await api.post(`/api/users/${userId}/profile-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      // Handle token update
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
       }
-    });
-    return response.data;
+
+      // Return the response data (contains user object and token)
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      throw error;
+    }
   },
 
   getCurrentMember: async () => {
-    
     const response = await api.get('/api/users/current');
     return response.data;
-  }
+  },
+
+  setAuthToken,
 };

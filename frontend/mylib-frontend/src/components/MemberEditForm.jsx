@@ -69,43 +69,46 @@ const MemberEditForm = ({
     setError(null);
     
     try {
-      let updatedUser;
+      let updatedProfileUrl = formData.profilePic;
       
-      // Check if this is a new user or an existing one
-      if (!formData.id) {
-        // Create a new user
-        const newUser = await memberService.createMember({
-          name: formData.name,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber,
-          password: "temp123", // Default password that should be changed on first login
-          roleList: formData.roleList
-        });
+      // If we have a new image, upload it first
+      if (imageFile) {
+        const formDataImg = new FormData();
+        formDataImg.append('file', imageFile);
+        const response = await memberService.uploadProfileImage(formData.id, formDataImg);
         
-        // If we have a new image, upload it
-        if (imageFile) {
-          const formDataImg = new FormData();
-          formDataImg.append('file', imageFile);
-          await memberService.uploadProfileImage(newUser.id, formDataImg);
+        // Get profile URL from response
+        updatedProfileUrl = response.user?.profilePic || response.profilePic || response;
+        
+        // Update token if received
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+          memberService.setAuthToken(response.token);
         }
-        
-        updatedUser = newUser;
-      } else {
-        // Upload image if a new one is selected
-        let updatedProfilePic = formData.profilePic;
-        if (imageFile) {
-          const formDataImg = new FormData();
-          formDataImg.append('file', imageFile);
-          updatedProfilePic = await memberService.uploadProfileImage(formData.id, formDataImg);
-        }
-        
-        // Update the existing user data
-        updatedUser = await memberService.updateMember(formData.id, {
-          ...formData,
-          profilePic: updatedProfilePic
-        });
       }
-      
+
+      // Update the user data
+      const userData = {
+        id: String(formData.id),
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber || '',
+        about: formData.about || '',
+        enabled: formData.enabled,
+        roleList: formData.roleList,
+        profilePic: updatedProfileUrl
+      };
+
+      // Update user with new data
+      const updatedUser = await memberService.updateMember(formData.id, userData);
+
+      // Update local preview
+      setPreviewImage(updatedProfileUrl);
+      setFormData(prev => ({
+        ...prev,
+        profilePic: updatedProfileUrl
+      }));
+
       onSave(updatedUser);
     } catch (err) {
       console.error('Error saving member:', err);

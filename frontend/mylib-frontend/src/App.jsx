@@ -27,17 +27,32 @@ import Profile from './pages/Profile';
 import Help from './pages/Help';
 import Support from './pages/Support';
 import Settings from './pages/Settings';
+import PasswordReset from './components/common/PasswordReset';
+import Home from './pages/Home';
+import { SidebarProvider } from './context/SidebarContext';
+import { useSidebar } from './context/SidebarContext';
 
-// Layout wrapper component
-const Layout = ({ children }) => (
-  <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <Navbar />
-    <Header />
-    <div className="pt-16 pl-64">
-      <main className="p-6">
-        {children}
-      </main>
+// Layout wrapper component for protected routes
+const ProtectedLayout = ({ children }) => {
+  const { isSidebarOpen } = useSidebar();
+  
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar />
+      <Header />
+      <div className={`pt-16 transition-all duration-300 ${isSidebarOpen ? 'md:pl-64' : 'md:pl-0'}`}>
+        <main className="p-6">
+          {children}
+        </main>
+      </div>
     </div>
+  );
+};
+
+// Public layout for home page and other public pages
+const PublicLayout = ({ children }) => (
+  <div className="min-h-screen">
+    {children}
   </div>
 );
 
@@ -50,196 +65,165 @@ function App() {
   return (
     <AuthProvider>
       <DarkModeProvider>
-        <Router>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+        <SidebarProvider>
+          <Router>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/reset-password" element={<PasswordReset />} />
 
-            {/* Protected routes with shared layout */}
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              {/* Protected routes with shared layout */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
                     <Dashboard />
-                  </main>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/books" element={
-              <ProtectedRoute>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/books" element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
                     <Books />
-                  </main>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/books/:id" element={
-              <ProtectedRoute>
-                <Layout>
-                  <BookDetails />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/books/add" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/books/:id" element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <BookDetails />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/books/add" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}>
+                  <ProtectedLayout>
                     <AddBook />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
-            
-            <Route path="/members" element={
-              <ProtectedRoute>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
+              
+              <Route path="/members" element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
                     <Members />
-                  </main>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
                     <Profile />
-                  </main>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/loans" element={
-              <ProtectedRoute>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/loans" element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
                     <Loans />
-                  </main>
-                </Layout>
-              </ProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } />
 
-            <Route path="/borrow-management" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/borrow-management" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}>
+                  <ProtectedLayout>
                     <BorrowManagement />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            <Route path="/reservation-management" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/reservation-management" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}>
+                  <ProtectedLayout>
                     <ReservationManagement />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            <Route path="/role-management" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/role-management" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                  <ProtectedLayout>
                     <RoleManagement />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            <Route path="/my-reservations" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/my-reservations" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+                  <ProtectedLayout>
                     <MyReservations />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            <Route path="/my-borrows" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/my-borrows" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+                  <ProtectedLayout>
                     <MyBorrows />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            <Route path="/manage-books" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/manage-books" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}>
+                  <ProtectedLayout>
                     <ManageBooks />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            <Route path="/fines" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/fines" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                  <ProtectedLayout>
                     <FineManagement />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            <Route path="/my-fines" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/my-fines" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+                  <ProtectedLayout>
                     <FinesAndPayments />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            {/* Updated Help and Support routes to use Layout */}
-            <Route path="/help" element={
-              <ProtectedRoute>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/help" element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
                     <Help />
-                  </main>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/support" element={
-              <ProtectedRoute>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/support" element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
                     <Support />
-                  </main>
-                </Layout>
-              </ProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              } />
 
-            <Route path="/settings" element={
-              <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                <Layout>
-                  <main className="container mx-auto px-4 py-8 dark:bg-gray-900">
+              <Route path="/settings" element={
+                <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                  <ProtectedLayout>
                     <Settings />
-                  </main>
-                </Layout>
-              </RoleProtectedRoute>
-            } />
+                  </ProtectedLayout>
+                </RoleProtectedRoute>
+              } />
 
-            {/* Redirect any unknown routes to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+              {/* Redirect any unknown routes to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </SidebarProvider>
       </DarkModeProvider>
     </AuthProvider>
   );

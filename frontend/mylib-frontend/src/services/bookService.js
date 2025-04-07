@@ -63,8 +63,8 @@ export const bookService = {
     return response.data;
   },
 
-  deleteBook: async (id) => {
-    const response = await api.delete(`/admin/book/${id}`);
+  deleteBook: async (bookId) => {
+    const response = await api.delete(`/admin/book/delete/${bookId}`);
     return response.data;
   },
 
@@ -72,4 +72,4 @@ export const bookService = {
     const response = await api.get(`${BOOKS_URL}/search`, { params: { query } });
     return response.data;
   }
-}; 
+};

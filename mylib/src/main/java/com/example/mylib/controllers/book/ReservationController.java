@@ -1,6 +1,9 @@
 package com.example.mylib.controllers.book;
 
 import com.example.mylib.services.Reservation.ReservationService;
+import com.example.mylib.services.User.UserService;
+import com.example.mylib.services.borrow.BorrowService;
+
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -12,8 +15,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ReservationController {
 
+    private final BorrowService borrowService;
     private final ReservationService reservationService;
     private final ModelMapper modelMapper;
+    private final UserService userService;
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllReservations() {
@@ -49,6 +54,10 @@ public class ReservationController {
     @PostMapping("/user/{userId}/{bookId}")
     public ResponseEntity<?> reserveBook(@PathVariable Long userId, @PathVariable Long bookId) {
         try {
+            if(!borrowService.isEligibleToBorrow(userId, bookId)) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("You have already borrowed this book"); 
+            }
             reservationService.createReservation(userId, bookId);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body("Reservation request created.");
