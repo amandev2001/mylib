@@ -1,6 +1,7 @@
 package com.example.mylib.controllers.admin;
 
 import com.example.mylib.dto.BookDTO;
+import com.example.mylib.exceptions.ResourceNotFoundException;
 import com.example.mylib.services.books.BookService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -78,7 +79,8 @@ public class AdminBookController {
             logger.debug("Validation error while updating book: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(e.getMessage());
-        } catch (ResourceNotFoundException e) {
+        } catch (
+                ResourceNotFoundException e) {
             // Handle not found error
             logger.debug("Book not found: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

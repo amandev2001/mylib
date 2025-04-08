@@ -13,11 +13,8 @@ import {
   CalendarIcon,
   TagIcon,
   ClockIcon,
-  StarIcon,
-  HeartIcon,
-  BookmarkIcon,
-  ShareIcon,
-  IdentificationIcon
+  IdentificationIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 
 // Default book cover images for different categories
@@ -43,8 +40,6 @@ function BookDetails() {
   const [borrowError, setBorrowError] = useState(null);
   const [borrowSuccess, setBorrowSuccess] = useState(null);
   const [activeBorrow, setActiveBorrow] = useState(null);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [reserveLoading, setReserveLoading] = useState(false);
   const [reserveError, setReserveError] = useState(null);
   const [reserveSuccess, setReserveSuccess] = useState(null);
@@ -184,21 +179,6 @@ function BookDetails() {
     }
   };
 
-  const toggleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    // Implement wishlist functionality
-  };
-
-  const toggleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    // Implement bookmark functionality
-  };
-
-  const handleShare = () => {
-    // Implement share functionality
-    console.log('Sharing book:', id);
-  };
-
   const handleImageError = (e) => {
     e.target.onerror = null;
     e.target.src = DEFAULT_COVERS[book?.category] || DEFAULT_COVERS.default;
@@ -235,7 +215,7 @@ function BookDetails() {
       {/* Top Navigation Bar */}
       <div className={`sticky top-0 z-10 ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border-b shadow-sm`}>
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <button
               onClick={() => navigate('/books')}
               className={`${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} flex items-center`}
@@ -243,26 +223,6 @@ function BookDetails() {
               <ArrowLeftIcon className="h-5 w-5 mr-2" />
               Back to Books
             </button>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleShare}
-                className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
-              >
-                <ShareIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-              </button>
-              <button
-                onClick={toggleBookmark}
-                className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
-              >
-                <BookmarkIcon className={`h-5 w-5 ${isBookmarked ? 'text-blue-500' : isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-              </button>
-              <button
-                onClick={toggleWishlist}
-                className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
-              >
-                <HeartIcon className={`h-5 w-5 ${isWishlisted ? 'text-red-500' : isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -296,9 +256,13 @@ function BookDetails() {
                       <button 
                         className={`w-full ${
                           book.available && !borrowLoading
-                            ? isDarkMode 
-                              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            ? activeBorrow
+                              ? isDarkMode 
+                                ? 'bg-red-600 hover:bg-red-700 text-white'
+                                : 'bg-red-600 hover:bg-red-700 text-white'
+                              : isDarkMode 
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                : 'bg-blue-600 hover:bg-blue-700 text-white'
                             : isDarkMode 
                               ? 'bg-gray-700 text-gray-400' 
                               : 'bg-gray-300 text-gray-500'
@@ -361,12 +325,6 @@ function BookDetails() {
                 
                 {/* Book metadata */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6">
-                  <div className="flex items-center">
-                    <StarIcon className="h-5 w-5 text-yellow-400 mr-1" />
-                    <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium`}>4.0</span>
-                    <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} ml-1`}>({book.reviews || 0} reviews)</span>
-                  </div>
-                  <span className={`hidden sm:inline ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>•</span>
                   <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{book.category}</span>
                   <span className={`hidden sm:inline ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>•</span>
                   <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{book.quantity} copies</span>
@@ -447,6 +405,14 @@ function BookDetails() {
                   <div>
                     <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Edition</p>
                     <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{book.edition || 'Not specified'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <MapPinIcon className={`h-5 w-5 mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <div>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Shelf Location</p>
+                    <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{book.location || 'Not specified'}</p>
                   </div>
                 </div>
               </div>

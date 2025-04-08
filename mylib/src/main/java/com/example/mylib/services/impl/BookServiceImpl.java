@@ -43,7 +43,6 @@ public class BookServiceImpl implements BookService {
         return fileUrl;
     }
 
-
     @Override
     public Book saveBook(Book book) {
         if (book.getIsbn() != null && !book.getIsbn().trim().isEmpty()) {
@@ -57,7 +56,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public BookDTO saveBookDto(BookDTO bookDto) {
         logger.debug("Processing book save request for ISBN: {}", bookDto.getIsbn());
-        
+
         // Validate ISBN uniqueness
         if (bookDto.getIsbn() != null && !bookDto.getIsbn().trim().isEmpty()) {
             if (bookRepo.existsByIsbn(bookDto.getIsbn())) {
@@ -65,10 +64,10 @@ public class BookServiceImpl implements BookService {
                 throw new IllegalArgumentException("A book with ISBN " + bookDto.getIsbn() + " already exists.");
             }
         }
-        
+
         // Map BookDTO to Book
         Book newBook = modelMapper.map(bookDto, Book.class);
-        
+
         // Ensure ISBN is explicitly set
         if (bookDto.getIsbn() != null) {
             newBook.setIsbn(bookDto.getIsbn());
@@ -81,7 +80,6 @@ public class BookServiceImpl implements BookService {
         return modelMapper.map(savedBook, BookDTO.class);
     }
 
-
     @Override
     public List<BookDTO> saveBookDtos(List<BookDTO> bookDtos) {
         List<Book> newBooks = bookDtos.stream().map(bookDTO -> modelMapper.map(bookDTO, Book.class))
@@ -92,7 +90,8 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Book getBookById(Long bookId) {
-        return bookRepo.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found bookId: " + bookId));
+        return bookRepo.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found bookId: " + bookId));
     }
 
     @Override
@@ -104,7 +103,8 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public BookDTO getBookDtoById(Long bookId) {
-        Book tempBook = bookRepo.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found bookId: " + bookId));
+        Book tempBook = bookRepo.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found bookId: " + bookId));
         return modelMapper.map(tempBook, BookDTO.class);
     }
 
@@ -116,81 +116,54 @@ public class BookServiceImpl implements BookService {
     @Override
     public BookDTO updateBookById(Long bookId, BookDTO newBookDto) {
         try {
-            // Get the existing book
             Book existingBook = getBookById(bookId);
-            
-            // Validate ISBN uniqueness if it's being changed
-            if (newBookDto.getIsbn() != null && !newBookDto.getIsbn().equals(existingBook.getIsbn())) {
-                if (bookRepo.existsByIsbn(newBookDto.getIsbn())) {
-                    throw new IllegalArgumentException("Cannot update: A different book with ISBN " + newBookDto.getIsbn() + " already exists.");
+
+            // Check for ISBN uniqueness if changed
+            String newIsbn = newBookDto.getIsbn();
+            if (newIsbn != null && !newIsbn.trim().isEmpty() && !newIsbn.equals(existingBook.getIsbn())) {
+                if (bookRepo.existsByIsbn(newIsbn.trim())) {
+                    throw new IllegalArgumentException(
+                            "Cannot update: A different book with ISBN " + newIsbn + " already exists.");
                 }
             }
-            
-            // Store old quantity for comparison
+
             int oldQuantity = existingBook.getQuantity();
-            logger.info("Updating book '{}' (ID: {}). Old quantity: {}, New quantity: {}", 
-                existingBook.getTitle(), bookId, oldQuantity, newBookDto.getQuantity());
-            
-            // Update only the fields that are present in the DTO
-            if (newBookDto.getTitle() != null) existingBook.setTitle(newBookDto.getTitle());
-            if (newBookDto.getAuthor() != null) existingBook.setAuthor(newBookDto.getAuthor());
-            if (newBookDto.getCategory() != null) existingBook.setCategory(newBookDto.getCategory());
-            existingBook.setAvailable(newBookDto.isAvailable());
-            if (newBookDto.getPublisher() != null) existingBook.setPublisher(newBookDto.getPublisher());
-            if (newBookDto.getLanguage() != null) existingBook.setLanguage(newBookDto.getLanguage());
-            if (newBookDto.getIsbn() != null) existingBook.setIsbn(newBookDto.getIsbn());
-            existingBook.setQuantity(newBookDto.getQuantity());
-            if (newBookDto.getCoverUrl() != null) existingBook.setCoverUrl(newBookDto.getCoverUrl());
-            
-            // Handle edition and publication date
-            if (newBookDto.getEdition() != null) {
-                existingBook.setEdition(newBookDto.getEdition());
-            }
-            if (newBookDto.getPublicationDate() != null) {
-                existingBook.setPublicationDate(newBookDto.getPublicationDate());
-            }
-            if (newBookDto.getPageCount() != null) {
-                existingBook.setPageCount(newBookDto.getPageCount());
-            }
+            int newQuantity = newBookDto.getQuantity();
 
-            // Save the updated book
-            Book updatedBook = saveBook(existingBook);
-            logger.info("Book '{}' updated successfully. New quantity: {}", 
-                updatedBook.getTitle(), updatedBook.getQuantity());
+            // Map only non-null fields from DTO to entity
+            modelMapper.map(newBookDto, existingBook); // Will skip null fields if config is set
 
-            // If there are books available, try to assign to next users
-            if (updatedBook.getQuantity() > 0) {
-                logger.info("Book '{}' has {} copies available. Attempting to assign to next users.", 
-                    updatedBook.getTitle(), updatedBook.getQuantity());
+            Book updatedBook = bookRepo.save(existingBook);
+
+            logger.debug("Book '{}' updated. Quantity changed from {} to {}",
+                    updatedBook.getTitle(), oldQuantity, newQuantity);
+
+            if (newQuantity > oldQuantity && updatedBook.isAvailable()) {
+                logger.debug("Processing reservations due to increased quantity for book '{}'", updatedBook.getTitle());
                 try {
                     reservationService.assignBookToNextUser(bookId);
-                    logger.info("Successfully processed reservations for book '{}'", updatedBook.getTitle());
                 } catch (Exception e) {
-                    logger.error("Failed to process reservations for book '{}'. Error: {}", 
-                        updatedBook.getTitle(), e.getMessage(), e);
+                    logger.error("Failed to process reservations for book '{}': {}", updatedBook.getTitle(),
+                            e.getMessage());
                 }
-            } else {
-                logger.info("No books available for '{}'. Skipping reservation processing.", 
-                    updatedBook.getTitle());
             }
 
             return modelMapper.map(updatedBook, BookDTO.class);
         } catch (Exception e) {
-            logger.error("Error updating book: ", e);
-            throw new RuntimeException("Failed to update book: " + e.getMessage());
+            logger.error("Error updating book with ID {}: {}", bookId, e.getMessage());
+            throw new RuntimeException("Failed to update book: " + e.getMessage(), e);
         }
     }
 
     @Override
     public List<BookDTO> searchBooks(String query) {
         String searchQuery = "%" + query + "%";
-        List<Book> books = bookRepo.findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCaseOrCategoryContainingIgnoreCase(
-                searchQuery, searchQuery, searchQuery);
+        List<Book> books = bookRepo
+                .findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCaseOrCategoryContainingIgnoreCase(
+                        searchQuery, searchQuery, searchQuery);
         return books.stream()
                 .map(book -> modelMapper.map(book, BookDTO.class))
                 .collect(Collectors.toList());
     }
 
-
 }
-

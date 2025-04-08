@@ -97,7 +97,7 @@ function Navbar() {
   return (
     <>
       <aside className={`fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-20 transition-transform duration-300 ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:hidden'
       }`}>
         {/* Sidebar Navigation */}
         <nav className="h-full overflow-y-auto px-4 py-4">

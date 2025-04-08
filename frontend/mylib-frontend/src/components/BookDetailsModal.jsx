@@ -2,10 +2,7 @@ import { Fragment, useState, useMemo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { 
   XMarkIcon, 
-  BookOpenIcon, 
-  HeartIcon, 
-  ShareIcon, 
-  BookmarkIcon,
+  BookOpenIcon,
   CalendarIcon,
   LanguageIcon,
   BuildingOfficeIcon,
@@ -29,8 +26,6 @@ const DEFAULT_COVERS = {
 };
 
 export default function BookDetailsModal({ isOpen, onClose, book, borrowHistory = [], isLoadingHistory = false }) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isReserving, setIsReserving] = useState(false);
   const [error, setError] = useState(null);
@@ -142,21 +137,6 @@ export default function BookDetailsModal({ isOpen, onClose, book, borrowHistory 
     }
   };
 
-  const handleShare = () => {
-    // Implement share functionality
-    console.log('Sharing book:', book.id);
-  };
-
-  const toggleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    // Implement wishlist functionality
-  };
-
-  const toggleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    // Implement bookmark functionality
-  };
-
   // Image error handling
   const handleImageError = (e) => {
     e.target.onerror = null; // Prevent infinite loop
@@ -190,15 +170,8 @@ export default function BookDetailsModal({ isOpen, onClose, book, borrowHistory 
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl sm:p-6">
-                {/* Header with Close and Share buttons */}
-                <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:flex sm:items-center sm:gap-2">
-                  <button
-                    onClick={handleShare}
-                    className="rounded-full p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
-                  >
-                    <span className="sr-only">Share</span>
-                    <ShareIcon className="h-5 w-5" aria-hidden="true" />
-                  </button>
+                {/* Close button */}
+                <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
                   <button
                     type="button"
                     className="rounded-full p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
@@ -225,25 +198,6 @@ export default function BookDetailsModal({ isOpen, onClose, book, borrowHistory 
                             containerClassName="rounded-lg overflow-hidden"
                             onError={handleImageError}
                           />
-                          {/* Quick Action Buttons */}
-                          <div className="absolute top-2 right-2 flex gap-2">
-                            <button
-                              onClick={toggleWishlist}
-                              className={`p-2 rounded-full bg-white/90 hover:bg-white transition-colors ${
-                                isWishlisted ? 'text-red-500' : 'text-gray-600'
-                              }`}
-                            >
-                              <HeartIcon className="h-5 w-5" />
-                            </button>
-                            <button
-                              onClick={toggleBookmark}
-                              className={`p-2 rounded-full bg-white/90 hover:bg-white transition-colors ${
-                                isBookmarked ? 'text-blue-500' : 'text-gray-600'
-                              }`}
-                            >
-                              <BookmarkIcon className="h-5 w-5" />
-                            </button>
-                          </div>
                         </div>
                       </div>
 
@@ -404,4 +358,4 @@ export default function BookDetailsModal({ isOpen, onClose, book, borrowHistory 
       </Dialog>
     </Transition.Root>
   );
-} 
+}

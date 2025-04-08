@@ -62,15 +62,6 @@ export default function BookForm({
     if (!bookData.publisher?.toString().trim()) newErrors.publisher = 'Publisher is required';
     if (!bookData.category?.toString().trim()) newErrors.category = 'Category is required';
     
-    // Validate edition as Year
-    if (bookData.edition) {
-      const year = parseInt(bookData.edition);
-      const currentYear = new Date().getFullYear();
-      if (isNaN(year) || year.toString().length !== 4 || year < 1800 || year > currentYear) {
-        newErrors.edition = `Must be a valid year between 1800 and ${currentYear}`;
-      }
-    }
-
     // Validate quantity
     if (isNaN(bookData.quantity) || parseInt(bookData.quantity) < 1) {
       newErrors.quantity = 'Must be at least 1';
@@ -204,21 +195,10 @@ export default function BookForm({
       fetchBookCover(value);
     }
     
-    if (name === 'edition') {
-      // Only allow 4-digit years
-      const yearValue = value.slice(0, 4);
-      if (!yearValue || (parseInt(yearValue) >= 1800 && parseInt(yearValue) <= new Date().getFullYear())) {
-        setBookData(prev => ({
-          ...prev,
-          [name]: yearValue
-        }));
-      }
-    } else {
-      setBookData(prev => ({
-        ...prev,
-        [name]: name === 'available' ? e.target.checked : value
-      }));
-    }
+    setBookData(prev => ({
+      ...prev,
+      [name]: name === 'available' ? e.target.checked : value
+    }));
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -286,6 +266,16 @@ export default function BookForm({
         if (selectedFile) {
           formData.append('file', selectedFile);
         }
+
+        // Log FormData contents
+        // console.log('FormData contents:');
+        // for (let pair of formData.entries()) {
+        //   if (pair[0] === 'bookDTO') {
+        //     console.log('bookDTO:', JSON.parse(await pair[1].text()));
+        //   } else {
+        //     console.log(pair[0], pair[1]);
+        //   }
+        // }
 
         await onSubmit(formData);
       } catch (error) {
@@ -434,7 +424,7 @@ export default function BookForm({
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
                 : isDarkMode 
                   ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500' 
-                  : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                  : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500'}`}
             value={bookData.title}
             onChange={handleChange}
           />
@@ -510,10 +500,10 @@ export default function BookForm({
         {/* Edition Year */}
         <div>
           <label htmlFor="edition" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-            Edition Year
+            Edition
           </label>
           <input
-            type="number"
+            type="text"
             name="edition"
             id="edition"
             className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm px-4 py-2.5 border-2
@@ -524,10 +514,7 @@ export default function BookForm({
                   : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
             value={bookData.edition}
             onChange={handleChange}
-            min="1800"
-            max={new Date().getFullYear()}
-            placeholder="YYYY"
-            pattern="\d{4}"
+            placeholder="Enter edition"
           />
           <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Enter a 4-digit year (1800-present)</p>
           {errors.edition && <p className="mt-1 text-sm text-red-500">{errors.edition}</p>}

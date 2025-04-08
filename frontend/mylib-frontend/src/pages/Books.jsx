@@ -189,10 +189,10 @@ function Books() {
       
       setBorrowSuccess(prev => ({ ...prev, [bookId]: 'Borrow request submitted successfully. Waiting for admin approval.' }));
       
-      // Clear success message after 2 seconds
+      // Clear success message after 5 seconds (increased from 2)
       setTimeout(() => {
         setBorrowSuccess(prev => ({ ...prev, [bookId]: null }));
-      }, 2000);
+      }, 5000);
     } catch (err) {
       console.error('Error borrowing book:', err);
       console.error('Error details:', {
@@ -221,15 +221,21 @@ function Books() {
       setReturnSuccess(prev => ({ ...prev, [borrowRecordId]: null }));
 
       await loanService.requestReturn(borrowRecordId);
-      setReturnSuccess(prev => ({ ...prev, [borrowRecordId]: 'Return request submitted successfully. Waiting for admin approval.' }));
+      
+      // Show success message
+      setReturnSuccess(prev => ({ 
+        ...prev, 
+        [borrowRecordId]: 'Return request submitted successfully. Waiting for admin approval.' 
+      }));
       
       // Refresh active borrows
       await fetchActiveBorrows();
+      await fetchBooks();
       
-      // Clear success message after 2 seconds
+      // Clear success message after 5 seconds (increased from 3)
       setTimeout(() => {
         setReturnSuccess(prev => ({ ...prev, [borrowRecordId]: null }));
-      }, 2000);
+      }, 5000);
     } catch (err) {
       console.error('Error returning book:', err);
       setReturnError(prev => ({ 
@@ -237,10 +243,10 @@ function Books() {
         [borrowRecordId]: err.response?.data || 'Failed to return book. Please try again.' 
       }));
 
-      // Clear error message after 3 seconds
+      // Clear error message after 5 seconds (increased from 3)
       setTimeout(() => {
         setReturnError(prev => ({ ...prev, [borrowRecordId]: null }));
-      }, 3000);
+      }, 5000);
     } finally {
       setReturnLoading(prev => ({ ...prev, [borrowRecordId]: false }));
     }
@@ -413,22 +419,6 @@ function Books() {
                   isDarkMode ? 'text-gray-300' : 'text-gray-600'
                 } mb-0.5 line-clamp-1`}>{book.author}</p>
                 
-                {/* Book Rating */}
-                <div className="flex items-center mb-1">
-                  <div className="flex items-center">
-                    <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                    </svg>
-                    <span className={`ml-1 text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>4.0</span>
-                  </div>
-                  
-                  <span className={`mx-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>•</span>
-                  
-                  <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} truncate`}>
-                    ISBN: {book.isbn || 'N/A'}
-                  </span>
-                </div>
-                
                 <div className="flex justify-between items-center mt-auto">
                   <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
                     book.available
@@ -476,35 +466,27 @@ function Books() {
                     >
                       {returnLoading[activeBorrow.id] ? 'Processing...' : 'Return Book'}
                     </button>
-                  ) : book.available && book.quantity > 0 ? (
-                    <button 
-                      className={`flex-1 px-2 py-1.5 rounded-md transition-colors text-xs ${
-                        !borrowLoading[book.id]
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-300 text-gray-500'
-                      }`}
-                      disabled={borrowLoading[book.id]}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBorrow(book.id);
-                      }}
-                    >
-                      {borrowLoading[book.id] ? 'Processing...' : 'Borrow'}
-                    </button>
                   ) : (
                     <button 
                       className={`flex-1 px-2 py-1.5 rounded-md transition-colors text-xs ${
-                        !reserveLoading[book.id]
-                          ? 'bg-amber-600 text-white hover:bg-amber-700'
+                        book.available && !borrowLoading[book.id]
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-300 text-gray-500'
                       }`}
-                      disabled={reserveLoading[book.id]}
+                      disabled={!book.available || borrowLoading[book.id]}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleReserve(book.id);
+                        book.available ? handleBorrow(book.id) : handleReserve(book.id);
                       }}
                     >
-                      {reserveLoading[book.id] ? 'Processing...' : 'Reserve'}
+                      {borrowLoading[book.id] 
+                        ? 'Processing...' 
+                        : book.available 
+                          ? 'Borrow Now' 
+                          : book.quantity > 0 
+                            ? 'Not Available'
+                            : 'Reserve Book'
+                      }
                     </button>
                   )}
                 </div>

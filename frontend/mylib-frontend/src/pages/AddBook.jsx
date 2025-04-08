@@ -511,8 +511,19 @@ export default function AddBook() {
           formData.append('file', selectedFile);
         }
 
+        // // Log FormData contents
+        // console.log('FormData contents:');
+        // for (let pair of formData.entries()) {
+        //   if (pair[0] === 'bookDTO') {
+        //     console.log('bookDTO:', JSON.parse(await pair[1].text()));
+        //   } else {
+        //     console.log(pair[0], pair[1]);
+        //   }
+        // }
+
         // Send the request
         await bookService.createBook(formData);
+        console.log(formData);
         
         // Show success message
         setSubmitError('success:Book added successfully!');
@@ -658,9 +669,11 @@ export default function AddBook() {
                         id="title"
                         required
                         className={`block w-full rounded-md shadow-sm text-sm px-3 py-2 border
-                          ${isDarkMode 
-                            ? 'bg-gray-700 border-gray-600 Pagestext-white focus:border-blue-500 focus:ring-blue-500' 
-                            : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                          ${errors.title 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                            : isDarkMode 
+                              ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500' 
+                              : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500'}`}
                         value={bookData.title}
                         onChange={handleChange}
                       />

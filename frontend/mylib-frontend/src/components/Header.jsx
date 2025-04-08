@@ -111,11 +111,11 @@ function Header() {
               )}
             </button>
 
-            {/* Notifications */}
+            {/* Notifications
             <button className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 relative">
               <BellIcon className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-            </button>
+            </button> */}
 
             {/* User Menu */}
             {isAuthenticated ? (
@@ -150,12 +150,28 @@ function Header() {
                     {/* Menu Items */}
                     <div className="py-1">
                       <Link
+                        to="/books"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <BookOpenIcon className="h-5 w-5 mr-3" />
+                        Books
+                      </Link>
+                      <Link
                         to="/profile"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <UserCircleIcon className="h-5 w-5 mr-3" />
                         Profile Settings
                       </Link>
+                      {isAdmin && (
+                        <Link
+                          to="/loans"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          <ShieldCheckIcon className="h-5 w-5 mr-3" />
+                          Loan Management
+                        </Link>
+                      )}
                       <Link
                         to="/my-borrows"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
