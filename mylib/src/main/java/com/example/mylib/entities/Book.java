@@ -38,6 +38,9 @@ public class Book {
     @Column(length = 500)
     private String publisher;
 
+    @Column(length = 20, unique = true)
+    private String isbn;
+
     private Year edition;
 
     @Column(length = 100)

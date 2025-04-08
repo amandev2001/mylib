@@ -13,7 +13,7 @@ export default function AddBook() {
     title: '',
     author: '',
     category: '',
-    available: true,
+    available: 'true',
     publisher: '',
     edition: '',
     language: '',
@@ -50,28 +50,40 @@ export default function AddBook() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!bookData.title?.toString().trim()) newErrors.title = 'Title is required';
-    if (!bookData.author?.toString().trim()) newErrors.author = 'Author is required';
-    if (!bookData.publisher?.toString().trim()) newErrors.publisher = 'Publisher is required';
-    if (!bookData.category?.toString().trim()) newErrors.category = 'Category is required';
     
-    // Validate edition as Year
+    // Required field validations
+    const requiredFields = {
+      title: 'Title is required',
+      author: 'Author is required',
+      publisher: 'Publisher is required',
+      category: 'Category is required',
+      publicationDate: 'Publication date is required'
+    };
+
+    Object.entries(requiredFields).forEach(([field, message]) => {
+      if (!bookData[field]?.toString().trim()) {
+        newErrors[field] = message;
+      }
+    });
+    
+    // Edition year validation
     if (bookData.edition) {
       const year = parseInt(bookData.edition);
       const currentYear = new Date().getFullYear();
-      if (isNaN(year) || year.toString().length !== 4 || year < 1800 || year > currentYear) {
+      const isValidYear = !isNaN(year) && 
+                         year.toString().length === 4 && 
+                         year >= 1800 && 
+                         year <= currentYear;
+                         
+      if (!isValidYear) {
         newErrors.edition = `Must be a valid year between 1800 and ${currentYear}`;
       }
     }
 
-    // Validate quantity
-    if (isNaN(bookData.quantity) || parseInt(bookData.quantity) < 1) {
+    // Quantity validation
+    const quantity = parseInt(bookData.quantity);
+    if (isNaN(quantity) || quantity < 1) {
       newErrors.quantity = 'Must be at least 1';
-    }
-
-    // Validate publication date
-    if (!bookData.publicationDate) {
-      newErrors.publicationDate = 'Publication date is required';
     }
 
     setErrors(newErrors);
@@ -473,6 +485,7 @@ export default function AddBook() {
         
         // Create book data with ONLY the fields defined in BookDTO
         const bookDataToSend = {
+          isbn: bookData.isbn,
           title: bookData.title,
           author: bookData.author,
           category: bookData.category,
@@ -502,10 +515,14 @@ export default function AddBook() {
         await bookService.createBook(formData);
         
         // Show success message
-        setSubmitError('Book added successfully!');
+        setSubmitError('success:Book added successfully!');
+        
+        // Navigate after a delay
         setTimeout(() => {
-          navigate('/books'); // Navigate back to books list after successful submission
+          setSubmitError(''); // Clear the message
+          // navigate('/books'); // Navigate after clearing the message
         }, 1500);
+        
       } catch (error) {
         console.error('Error adding book:', error);
         setSubmitError(error.response?.data || 'Failed to add book. Please try again.');
@@ -642,7 +659,7 @@ export default function AddBook() {
                         required
                         className={`block w-full rounded-md shadow-sm text-sm px-3 py-2 border
                           ${isDarkMode 
-                            ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500' 
+                            ? 'bg-gray-700 border-gray-600 Pagestext-white focus:border-blue-500 focus:ring-blue-500' 
                             : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
                         value={bookData.title}
                         onChange={handleChange}
@@ -934,8 +951,16 @@ export default function AddBook() {
             </div>
 
             {submitError && (
-              <div className={`mt-4 text-sm ${isDarkMode ? 'text-red-400 bg-red-900/50' : 'text-red-600 bg-red-50'} p-3 rounded-md`}>
-                {submitError}
+              <div className={`mt-4 text-sm p-3 rounded-md ${
+                submitError.startsWith('success:')
+                  ? isDarkMode 
+                    ? 'text-green-400 bg-green-900/50' 
+                    : 'text-green-600 bg-green-50'
+                  : isDarkMode
+                    ? 'text-red-400 bg-red-900/50'
+                    : 'text-red-600 bg-red-50'
+              }`}>
+                {submitError.startsWith('success:') ? submitError.substring(8) : submitError}
               </div>
             )}
 

@@ -16,7 +16,8 @@ import {
   StarIcon,
   HeartIcon,
   BookmarkIcon,
-  ShareIcon
+  ShareIcon,
+  IdentificationIcon
 } from '@heroicons/react/24/outline';
 
 // Default book cover images for different categories
@@ -408,6 +409,15 @@ function BookDetails() {
               <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 p-6 mb-6 rounded-lg ${
                 isDarkMode ? 'bg-gray-800' : 'bg-white'
               } shadow-sm`}>
+                {/* ISBN */}
+                <div className="flex items-start gap-2">
+                  <IdentificationIcon className={`h-5 w-5 mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <div>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>ISBN</p>
+                    <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{book.isbn || 'Not available'}</p>
+                  </div>
+                </div>
+
                 <div className="flex items-start gap-2">
                   <TagIcon className={`h-5 w-5 mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                   <div>

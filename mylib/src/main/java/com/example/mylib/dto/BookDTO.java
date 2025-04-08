@@ -22,6 +22,7 @@ public class BookDTO {
     private String category;
     private boolean available;
     private String publisher;
+    private String isbn;
     private Year edition;
     private String language;
     private LocalDate publicationDate;

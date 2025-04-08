@@ -8,36 +8,27 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class MyUserDetailsService implements UserDetailsService {
-
-
-    private final UserRepo userRepo;
-
+    
+    private final Logger logger = LoggerFactory.getLogger(MyUserDetailsService.class);
+    
     @Autowired
-    public MyUserDetailsService(UserRepo userRepo) {
-        this.userRepo = userRepo;
-    }
+    private UserRepo userRepo;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("Loading user by username: " + username);
+        logger.debug("Attempting to load user: {}", username);
         Users user = userRepo.findByEmail(username);
+        
         if(user != null) {
-            System.out.println("User found: " + user.getEmail());
-            System.out.println("Roles: " + user.getRoleList());
-            System.out.println("Password hash: " + user.getPassword());
-            System.out.println("Password hash length: " + (user.getPassword() != null ? user.getPassword().length() : 0));
-            System.out.println("Enabled status: " + user.isEnabled());
-            
-            // Create UserPrincipal
-            UserPrincipal principal = new UserPrincipal(user);
-            System.out.println("Created UserPrincipal with authorities: " + principal.getAuthorities());
-            System.out.println("UserPrincipal password: " + principal.getPassword());
-            return principal;
+            logger.debug("User found: {}", username);
+            return new UserPrincipal(user);
         } else {
-            System.out.println("User not found with email: " + username);
+            logger.debug("User not found: {}", username);
             throw new UsernameNotFoundException("User not found with email: " + username);
         }
     }

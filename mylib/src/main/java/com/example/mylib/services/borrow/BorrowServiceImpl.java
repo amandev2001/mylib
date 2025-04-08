@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -35,9 +36,9 @@ public class BorrowServiceImpl implements BorrowService {
     public boolean isEligibleToBorrow(Long userId, Long bookId) {
         List<BorrowRecord> existingRecords = borrowRepo.findByUserIdAndBookId(userId, bookId);
         return !existingRecords.stream()
-                .anyMatch(record -> record.getStatus() == BorrowStatus.PENDING || 
-                                  record.getStatus() == BorrowStatus.BORROWED || 
-                                  record.getStatus() == BorrowStatus.RETURN_PENDING);
+                .anyMatch(record -> record.getStatus() == BorrowStatus.PENDING ||
+                        record.getStatus() == BorrowStatus.BORROWED ||
+                        record.getStatus() == BorrowStatus.RETURN_PENDING);
     }
 
     @Override
@@ -53,7 +54,8 @@ public class BorrowServiceImpl implements BorrowService {
         }
 
         if (!isEligibleToBorrow(userId, bookId)) {
-            throw new RuntimeException("You already have an active request or borrowed this book. Please return it first.");
+            throw new RuntimeException(
+                    "You already have an active request or borrowed this book. Please return it first.");
         }
 
         BorrowRecord borrowRecord = new BorrowRecord();
@@ -76,38 +78,49 @@ public class BorrowServiceImpl implements BorrowService {
 
         // Check if there are any pending reservation-based requests for this book
         List<BorrowRecord> pendingReservationRequests = borrowRepo.findByBookIdAndStatusAndFromReservation(
-            borrowRecord.getBook().getId(), 
-            BorrowStatus.PENDING, 
-            Boolean.TRUE
-        );
+                borrowRecord.getBook().getId(),
+                BorrowStatus.PENDING,
+                Boolean.TRUE);
 
-        // If this is not a reservation-based request and there are pending reservation requests,
+        // If this is not a reservation-based request and there are pending reservation
+        // requests,
         // throw an error
         if (!borrowRecord.isFromReservation() && !pendingReservationRequests.isEmpty()) {
-            throw new RuntimeException("Cannot approve direct borrow request while there are pending reservation requests for this book.");
+            throw new RuntimeException(
+                    "Cannot approve direct borrow request while there are pending reservation requests for this book.");
         }
 
         // Set issue date and due date only when approving the request
         borrowRecord.setIssueDate(LocalDate.now());
         borrowRecord.setDueDate(LocalDate.now().plusDays(AppConstants.BORROW_DAYS_LIMIT));
-        
+
         // Approve borrow request
         borrowRecord.setStatus(BorrowStatus.BORROWED);
 
         // Reduce book quantity with optimistic locking
         Book book = borrowRecord.getBook();
         if (book.getQuantity() <= 0) {
-            throw new RuntimeException("Book is no longer available for borrowing. Please try again or contact the librarian.");
+            throw new RuntimeException(
+                    "Book is no longer available for borrowing. Please try again or contact the librarian.");
         }
-        
+
         try {
             book.setQuantity(book.getQuantity() - 1);
             bookRepo.save(book);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to update book quantity. The book may have been borrowed by someone else. Please try again.");
+            throw new RuntimeException(
+                    "Failed to update book quantity. The book may have been borrowed by someone else. Please try again.");
         }
 
         return borrowRepo.save(borrowRecord);
+    }
+
+    private double calculateFine(LocalDate dueDate, LocalDate returnDate) {
+        if (dueDate.isBefore(returnDate)) {
+            long overdueDays = ChronoUnit.DAYS.between(dueDate, returnDate);
+            return overdueDays * AppConstants.FINE_PER_DAY;
+        }
+        return 0.0;
     }
 
     @Override
@@ -132,16 +145,19 @@ public class BorrowServiceImpl implements BorrowService {
             throw new RuntimeException("This book is not marked for return.");
         }
 
-        // Calculate fine if overdue
-        if (borrowRecord.getDueDate().isBefore(LocalDate.now())) {
-            long overdueDays = ChronoUnit.DAYS.between(borrowRecord.getDueDate(), LocalDate.now());
-            double fineAmount = overdueDays * AppConstants.FINE_PER_DAY;
+        // Set return date
+        LocalDate returnDate = LocalDate.now();
+        borrowRecord.setReturnDate(returnDate);
+
+        // Calculate fine based on return date
+        double fineAmount = calculateFine(borrowRecord.getDueDate(), returnDate);
+        System.out.println("Fine Amount : " + fineAmount);
+        if (fineAmount > 0) {
             borrowRecord.setFineAmount(fineAmount);
         }
 
-        // Mark as returned and set return date
+        // Mark as returned
         borrowRecord.setStatus(BorrowStatus.RETURNED);
-        borrowRecord.setReturnDate(LocalDate.now());
         borrowRepo.save(borrowRecord);
 
         // Increase book quantity
@@ -218,17 +234,48 @@ public class BorrowServiceImpl implements BorrowService {
         BorrowRecord borrowRecord = borrowRepo.findById(borrowRecordId)
                 .orElseThrow(() -> new ResourceNotFoundException("Borrow record not found."));
 
-        // Only allow updating certain fields
-        if (updateData.getIssueDate() != null) {
+        boolean updated = false;
+
+        if (!Objects.equals(updateData.getIssueDate(), borrowRecord.getIssueDate())) {
             borrowRecord.setIssueDate(updateData.getIssueDate());
-        }
-        if (updateData.getDueDate() != null) {
-            borrowRecord.setDueDate(updateData.getDueDate());
-        }
-        if (updateData.getFineAmount() > 0) {
-            borrowRecord.setFineAmount(updateData.getFineAmount());
+            updated = true;
         }
 
-        return borrowRepo.save(borrowRecord);
+        if (!Objects.equals(updateData.getDueDate(), borrowRecord.getDueDate())) {
+            borrowRecord.setDueDate(updateData.getDueDate());
+            updated = true;
+        }
+
+        if (!Objects.equals(updateData.getReturnDate(), borrowRecord.getReturnDate())) {
+            borrowRecord.setReturnDate(updateData.getReturnDate());
+            updated = true;
+        }
+
+        if(!Objects.equals(updateData.getFineAmount(),borrowRecord.getFineAmount())){
+            borrowRecord.setFineAmount((updateData.getFineAmount()));
+        }
+
+        // Fine should only be calculated when any relevant field has changed
+        if (updated) {
+            if (borrowRecord.getDueDate() != null && borrowRecord.getReturnDate() != null &&
+                    borrowRecord.getReturnDate().isAfter(borrowRecord.getDueDate())) {
+
+                double fineAmount = calculateFine(borrowRecord.getDueDate(), borrowRecord.getReturnDate());
+                System.out.println("Fine Amount : " + fineAmount);
+                borrowRecord.setFineAmount(fineAmount);
+            }
+            return borrowRepo.save(borrowRecord);
+        }
+
+
+        if (updated) {
+            System.out.println("Fields changed, saving...");
+            return borrowRepo.save(borrowRecord);
+        } else {
+            System.out.println("No fields changed.");
+            return borrowRecord; // no save = no update SQL query
+        }
     }
+
+
 }

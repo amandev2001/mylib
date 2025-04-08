@@ -71,7 +71,7 @@ function Books() {
       console.log('Current token:', token);
       
       const data = await bookService.getAllBooks();
-      console.log('Fetched books:', data);
+      console.log('Book data structure:', data[0]); // Log first book to see structureure
       setBooks(data);
       setError(null);
     } catch (err) {
@@ -425,7 +425,7 @@ function Books() {
                   <span className={`mx-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>•</span>
                   
                   <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} truncate`}>
-                    Book {book.id}
+                    ISBN: {book.isbn || 'N/A'}
                   </span>
                 </div>
                 

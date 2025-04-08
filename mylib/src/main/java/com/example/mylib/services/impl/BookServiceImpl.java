@@ -21,14 +21,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
 
-
     @Autowired
     private BookRepo bookRepo;
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
     private ReservationService reservationService;
-    Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final BooksImageServiceImpl imageService;
 
     @Override
@@ -47,16 +46,38 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Book saveBook(Book book) {
+        if (book.getIsbn() != null && !book.getIsbn().trim().isEmpty()) {
+            if (bookRepo.existsByIsbn(book.getIsbn())) {
+                throw new IllegalArgumentException("A book with ISBN " + book.getIsbn() + " already exists.");
+            }
+        }
         return bookRepo.save(book);
     }
 
     @Override
     public BookDTO saveBookDto(BookDTO bookDto) {
+        logger.debug("Processing book save request for ISBN: {}", bookDto.getIsbn());
+        
+        // Validate ISBN uniqueness
+        if (bookDto.getIsbn() != null && !bookDto.getIsbn().trim().isEmpty()) {
+            if (bookRepo.existsByIsbn(bookDto.getIsbn())) {
+                logger.debug("Duplicate ISBN found: {}", bookDto.getIsbn());
+                throw new IllegalArgumentException("A book with ISBN " + bookDto.getIsbn() + " already exists.");
+            }
+        }
+        
         // Map BookDTO to Book
         Book newBook = modelMapper.map(bookDto, Book.class);
+        
+        // Ensure ISBN is explicitly set
+        if (bookDto.getIsbn() != null) {
+            newBook.setIsbn(bookDto.getIsbn());
+            logger.debug("ISBN set on new book entity: {}", newBook.getIsbn());
+        }
 
         // Save to database and map back to BookDTO
         Book savedBook = saveBook(newBook);
+        logger.debug("Book saved successfully with ID: {}", savedBook.getId());
         return modelMapper.map(savedBook, BookDTO.class);
     }
 
@@ -98,6 +119,13 @@ public class BookServiceImpl implements BookService {
             // Get the existing book
             Book existingBook = getBookById(bookId);
             
+            // Validate ISBN uniqueness if it's being changed
+            if (newBookDto.getIsbn() != null && !newBookDto.getIsbn().equals(existingBook.getIsbn())) {
+                if (bookRepo.existsByIsbn(newBookDto.getIsbn())) {
+                    throw new IllegalArgumentException("Cannot update: A different book with ISBN " + newBookDto.getIsbn() + " already exists.");
+                }
+            }
+            
             // Store old quantity for comparison
             int oldQuantity = existingBook.getQuantity();
             logger.info("Updating book '{}' (ID: {}). Old quantity: {}, New quantity: {}", 
@@ -110,6 +138,7 @@ public class BookServiceImpl implements BookService {
             existingBook.setAvailable(newBookDto.isAvailable());
             if (newBookDto.getPublisher() != null) existingBook.setPublisher(newBookDto.getPublisher());
             if (newBookDto.getLanguage() != null) existingBook.setLanguage(newBookDto.getLanguage());
+            if (newBookDto.getIsbn() != null) existingBook.setIsbn(newBookDto.getIsbn());
             existingBook.setQuantity(newBookDto.getQuantity());
             if (newBookDto.getCoverUrl() != null) existingBook.setCoverUrl(newBookDto.getCoverUrl());
             

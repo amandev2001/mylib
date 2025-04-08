@@ -129,7 +129,7 @@ export default function FinesAndPayments() {
             <div className="ml-4">
               <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Amount</p>
               <p className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                ${stats.totalAmount.toFixed(2)}
+                ₹ {stats.totalAmount.toFixed(2)}
               </p>
             </div>
           </div>
@@ -202,7 +202,7 @@ export default function FinesAndPayments() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        ${fine.amount.toFixed(2)}
+                        ₹ {fine.amount.toFixed(2)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -304,7 +304,7 @@ export default function FinesAndPayments() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        ${payment.amount.toFixed(2)}
+                        ₹ {payment.amount.toFixed(2)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

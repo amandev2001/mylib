@@ -202,7 +202,7 @@ const LoanTableRow = memo(({
             onChange={(e) => onEditFormChange({ ...editForm, fineAmount: e.target.value })}
           />
         ) : (
-          <div className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>${loan.fineAmount || '0.00'}</div>
+          <div className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>₹ {loan.fineAmount || '0.00'}</div>
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -219,4 +219,4 @@ const LoanTableRow = memo(({
 
 LoanTableRow.displayName = 'LoanTableRow';
 
-export default LoanTableRow; 
+export default LoanTableRow;

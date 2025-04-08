@@ -21,78 +21,73 @@ public class AdminBookController {
 
     @Autowired
     private BookService bookService;
-
-
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
-
     @PostMapping("/add")
-    public ResponseEntity<BookDTO> saveBook(@RequestPart BookDTO bookDTO,
-                                            @RequestParam(value = "file", required = false) MultipartFile coverImage) {
+    public ResponseEntity<?> saveBook(@RequestPart BookDTO bookDTO,
+                                    @RequestParam(value = "file", required = false) MultipartFile coverImage) {
         try {
-            logger.info("Attempting to save book: {}", bookDTO);
+            logger.debug("Saving book with ISBN: {}", bookDTO.getIsbn());
             
             // If we have a cover image, set the URL before saving
             if (coverImage != null && !coverImage.isEmpty()) {
-                // Generate a temporary ID for the file name
                 String tempFileName = UUID.randomUUID().toString();
                 String fileUrl = bookService.uploadCoverImage(coverImage, tempFileName);
                 bookDTO.setCoverUrl(fileUrl);
-                logger.info("Cover image uploaded successfully. URL: {}", fileUrl);
+                logger.debug("Cover image uploaded: {}", fileUrl);
             }
             
             // Save the book with all data including cover URL
             BookDTO createdBookDto = bookService.saveBookDto(bookDTO);
-            logger.info("Book saved successfully with ID: {}", createdBookDto.getId());
-
+            logger.debug("Book saved with ID: {}", createdBookDto.getId());
             return ResponseEntity.ok(createdBookDto);
+            
+        } catch (IllegalArgumentException e) {
+            // Handle validation errors (like duplicate ISBN)
+            logger.debug("Validation error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
         } catch (Exception e) {
-            logger.error("Error saving book: ", e);
+            // Handle other unexpected errors
+            logger.error("Error saving book", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+                    .body("An unexpected error occurred while saving the book.");
         }
     }
 
-
-    //    @PostMapping("/add-multiple")
-//    public ResponseEntity<?> addMultipleBooks(@RequestBody List<BookDTO> bookDTOS) {
-//        try {
-//            List<BookDTO> savedBooks = bookService.saveBookDtos(bookDTOS);
-//            if (savedBooks == null || savedBooks.isEmpty()) {
-//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Book could not be added please try again.");
-//            }
-//            return ResponseEntity.status(HttpStatus.OK).body(savedBooks);
-//        } catch (
-//                Exception e) {
-//            return ResponseEntity
-//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("An error occur during adding books. " + e.getMessage());
-//        }
-//    }
     @PutMapping("/update/{bookId}")
-    public ResponseEntity<?> updateBook(
-            @PathVariable Long bookId,
-            @RequestPart BookDTO bookDTO,
-            @RequestParam(value = "file", required = false) MultipartFile coverImage) {
+    public ResponseEntity<?> updateBook(@PathVariable Long bookId,
+                                      @RequestPart BookDTO bookDTO,
+                                      @RequestParam(value = "file", required = false) MultipartFile coverImage) {
         try {
-            // Update the book
-            BookDTO updatedBook = bookService.updateBookById(bookId, bookDTO);
+            logger.debug("Updating book ID: {} with ISBN: {}", bookId, bookDTO.getIsbn());
 
-            // Upload new cover image if present
             if (coverImage != null && !coverImage.isEmpty()) {
-                String fileUrl = bookService.uploadCoverImage(coverImage, String.valueOf(bookId));
-                updatedBook.setCoverUrl(fileUrl);
-                updatedBook = bookService.updateBookById(bookId, updatedBook);
+                String tempFileName = UUID.randomUUID().toString();
+                String fileUrl = bookService.uploadCoverImage(coverImage, tempFileName);
+                bookDTO.setCoverUrl(fileUrl);
+                logger.debug("New cover image uploaded: {}", fileUrl);
             }
 
-            if (updatedBook == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Book could not be updated please try again.");
-            }
-            return ResponseEntity.status(HttpStatus.OK).body(updatedBook);
+            BookDTO updatedBook = bookService.updateBookById(bookId, bookDTO);
+            logger.debug("Book updated successfully");
+            return ResponseEntity.ok(updatedBook);
+
+        } catch (IllegalArgumentException e) {
+            // Handle validation errors (like duplicate ISBN)
+            logger.debug("Validation error while updating book: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            // Handle not found error
+            logger.debug("Book not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
         } catch (Exception e) {
+            // Handle other unexpected errors
             logger.error("Error updating book: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while updating the book: " + e.getMessage());
+                    .body("An unexpected error occurred while updating the book.");
         }
     }
 

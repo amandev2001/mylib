@@ -3,6 +3,7 @@ import { PhotoIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import ImagePreview from './common/ImagePreview';
 import { useDarkMode } from '../context/DarkModeContext';
+import { formatDateForInput } from '../utils/dateExtensions';  // Add this import
 
 export default function BookForm({ 
   initialData = {}, 
@@ -34,19 +35,8 @@ export default function BookForm({
   // Pre-fill form data for edit mode
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
-      // Ensure publication date is in the correct format
-      let formattedPublicationDate = '';
-      if (initialData.publicationDate) {
-        // Handle different date formats - ensure it's in YYYY-MM-DD format for the date input
-        const date = new Date(initialData.publicationDate);
-        if (!isNaN(date)) {
-          // Format the date as yyyy-MM-dd
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          formattedPublicationDate = `${year}-${month}-${day}`;
-        }
-      }
+      // Use the utility function for date formatting
+      const formattedPublicationDate = formatDateForInput(initialData.publicationDate);
 
       setBookData({
         title: initialData.title || '',
@@ -58,7 +48,8 @@ export default function BookForm({
         language: initialData.language || '',
         publicationDate: formattedPublicationDate,
         quantity: initialData.quantity || 1,
-        isbn: initialData.isbn || ''
+        isbn: initialData.isbn || '',
+        coverUrl: initialData.coverUrl || ''
       });
       setImagePreview(initialData.coverUrl || null);
     }
@@ -144,25 +135,18 @@ export default function BookForm({
           typeof author === 'object' ? author.name : author
         ).join(', ');
 
-        // Extract publication date
+        // Extract publication date using utility function
         let publicationDate = '';
         if (openLibraryData.publish_date) {
-          // Handle different date formats
           const dateStr = Array.isArray(openLibraryData.publish_date) 
             ? openLibraryData.publish_date[0] 
             : openLibraryData.publish_date;
           
-          // Try to parse the date
-          const date = new Date(dateStr);
-          if (!isNaN(date)) {
-            // Format the date as yyyy-MM-dd
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            publicationDate = `${year}-${month}-${day}`;
-          } else if (dateStr.match(/^\d{4}$/)) {
+          if (dateStr.match(/^\d{4}$/)) {
             // If we only have a year, use January 1st of that year
             publicationDate = `${dateStr}-01-01`;
+          } else {
+            publicationDate = formatDateForInput(dateStr);
           }
         }
 
@@ -200,13 +184,15 @@ export default function BookForm({
     }
   };
 
-  const determineLanguage = (bookData) => {
-    // Implementation of language detection logic
+  const determineLanguage = (openLibraryData) => {
+    // Implementation to be added if needed
+    console.log('Determining language from:', openLibraryData);
     return '';
   };
 
-  const determineCategory = (bookData) => {
-    // Implementation of category matching logic
+  const determineCategory = (openLibraryData) => {
+    // Implementation to be added if needed
+    console.log('Determining category from:', openLibraryData);
     return '';
   };
 
@@ -285,9 +271,10 @@ export default function BookForm({
           publisher: bookData.publisher,
           language: bookData.language,
           quantity: parseInt(bookData.quantity),
+          isbn: bookData.isbn,
           coverUrl: imagePreview || (isEditMode ? initialData.coverUrl : ''),
           edition: parseInt(bookData.edition),
-          publicationDate: bookData.publicationDate // Already in ISO format from input
+          publicationDate: bookData.publicationDate 
         };
 
         // Append book data as JSON string
@@ -300,19 +287,27 @@ export default function BookForm({
           formData.append('file', selectedFile);
         }
 
-        // Log form data contents for debugging
-        for (let pair of formData.entries()) {
-          console.log(pair[0] + ': ' + pair[1]);
-        }
-
         await onSubmit(formData);
       } catch (error) {
         console.error(`Error ${isEditMode ? 'updating' : 'adding'} book:`, error);
-        setSubmitError(
-          error.response?.data?.message || 
-          error.response?.data?.error || 
-          `Failed to ${isEditMode ? 'update' : 'add'} book. Please try again later.`
-        );
+        let errorMessage;
+        
+        // Handle specific error cases
+        if (error.response?.status === 409) {
+          // Conflict error - likely duplicate ISBN
+          errorMessage = error.response.data || 'A book with this ISBN already exists.';
+          setErrors(prev => ({
+            ...prev,
+            isbn: errorMessage
+          }));
+        } else {
+          errorMessage = error.response?.data?.message || 
+                       error.response?.data || 
+                       `Failed to ${isEditMode ? 'update' : 'add'} book. Please try again later.`;
+        }
+        
+        setSubmitError(errorMessage);
+        throw error; // Re-throw to let parent components handle the error state
       }
     }
   };
@@ -399,28 +394,30 @@ export default function BookForm({
           </div>
         </div>
 
-        {/* ISBN Field - only shown in add mode */}
-        {!isEditMode && (
-          <div>
-            <label htmlFor="isbn" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              ISBN
-            </label>
-            <input
-              type="text"
-              name="isbn"
-              id="isbn"
-              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm px-4 py-2.5 border-2 ${
-                isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500' 
-                  : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-              }`}
-              value={bookData.isbn}
-              onChange={handleChange}
-              placeholder="Enter ISBN to auto-fill"
-            />
-            <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Enter ISBN-10 or ISBN-13 to auto-fill details</p>
-          </div>
-        )}
+        {/* ISBN Field - shown in both add and edit modes */}
+        <div>
+          <label htmlFor="isbn" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            ISBN
+          </label>
+          <input
+            type="text"
+            name="isbn"
+            id="isbn"
+            className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm px-4 py-2.5 border-2 ${
+              isDarkMode 
+                ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500' 
+                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+            }`}
+            value={bookData.isbn}
+            onChange={handleChange}
+            placeholder="Enter ISBN to auto-fill"
+          />
+          {!isEditMode && (
+            <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Enter ISBN-10 or ISBN-13 to auto-fill details
+            </p>
+          )}
+        </div>
 
         {/* Title */}
         <div>
@@ -645,4 +642,4 @@ export default function BookForm({
       </div>
     </form>
   );
-} 
+}

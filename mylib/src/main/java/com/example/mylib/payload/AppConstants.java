@@ -10,7 +10,7 @@ public class AppConstants {
     public static final String ROLE_STUDENT = "ROLE_STUDENT";
     public static final String ROLE_LIBRARIAN = "ROLE_LIBRARIAN";
     public static final int BORROW_DAYS_LIMIT = 14; // Books are due in 14 days
-    public static final double FINE_PER_DAY = 2.0; // Fine per overdue day
+    public static final double FINE_PER_DAY = 10.0; // Fine per overdue day
 
     public static final int CONTACT_IMAGE_HEIGHT = 500;
     public static final int CONTACT_IMAGE_WIDTH = 500;

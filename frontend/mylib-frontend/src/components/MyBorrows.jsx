@@ -398,7 +398,7 @@ const MyBorrows = () => {
                         />
                       </TableCell>
                       <TableCell sx={{ color: theme.palette.text.primary }}>
-                        {borrow.fineAmount > 0 ? `$${borrow.fineAmount.toFixed(2)}` : '-'}
+                        {borrow.fineAmount > 0 ? `₹ ${borrow.fineAmount.toFixed(2)}` : '-'}
                       </TableCell>
                       <TableCell>
                         {getActionButtons(borrow)}
@@ -415,4 +415,4 @@ const MyBorrows = () => {
   );
 };
 
-export default MyBorrows; 
+export default MyBorrows;
