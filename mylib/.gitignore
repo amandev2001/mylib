@@ -1,10 +1,22 @@
+# === General ===
 HELP.md
 target/
+build/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-### STS ###
+# === Environment / Config Files ===
+/src/main/resources/application.properties
+/src/main/resources/application-dev.properties
+/src/main/resources/application-prod.properties
+
+# Use a template for configs (safe to push)
+!/src/main/resources/application-template.properties
+
+# === Spring Tool Suite (STS) ===
 .apt_generated
 .classpath
 .factorypath
@@ -13,23 +25,18 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-.mvn
+# === IntelliJ IDEA ===
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# === NetBeans ===
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# === VS Code ===
 .vscode/
-/src/main/resources/application.properties
