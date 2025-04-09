@@ -193,20 +193,6 @@ function Navbar() {
               </div>
             </div>
 
-            {/* Settings Section for Admin */}
-            {isAdmin && (
-              <div>
-                <div className="text-gray-500 dark:text-gray-400 uppercase tracking-wider text-xs font-semibold mb-2">
-                  SETTINGS
-                </div>
-                <div className="space-y-1">
-                  <NavLink to="/settings" icon={Cog6ToothIcon}>
-                    System Settings
-                  </NavLink>
-                </div>
-              </div>
-            )}
-
             {/* Logout Button */}
             <div className="pt-6">
               <button

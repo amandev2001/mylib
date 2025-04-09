@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { bookService } from '../services/bookService';
 import { loanService } from '../services/loanService';
 import { authService } from '../services/authService';
+import { reserveService } from '../services/reserveService';
 import { formatDate } from '../utils/dateExtensions';
 import { useDarkMode } from '../context/DarkModeContext';
 import ImagePreview from '../components/common/ImagePreview';
@@ -143,12 +144,26 @@ function BookDetails() {
       setBorrowError(null);
       setBorrowSuccess(null);
 
+      if (!activeBorrow) {
+        setBorrowError('No active borrow found for this book');
+        return;
+      }
+
       await loanService.requestReturn(activeBorrow.id);
       setBorrowSuccess('Return request submitted successfully. Waiting for admin approval.');
-      fetchBookDetails();
-      checkActiveBorrow();
+      
+      // Refresh the book details and active borrow status
+      await Promise.all([
+        fetchBookDetails(),
+        checkActiveBorrow(),
+        fetchBorrowHistory()
+      ]);
+
+      // Reset the active borrow since the return request was successful
+      setActiveBorrow(null);
     } catch (err) {
-      setBorrowError(err.response?.data || 'Failed to return book. Please try again.');
+      console.error('Error returning book:', err);
+      setBorrowError(err.response?.data?.message || 'Failed to return book. Please try again.');
     } finally {
       setBorrowLoading(false);
     }
@@ -166,14 +181,27 @@ function BookDetails() {
         return;
       }
 
-      // TODO: Implement actual reservation API call when backend supports it
-      // For now, simulate success
-      setTimeout(() => {
-        setReserveSuccess('Book reserved successfully. You will be notified when it becomes available.');
-      }, 1000);
+      // Check if user already has active reservations for this book
+      const userReservations = await reserveService.getReservesByUser(currentUser.id);
+      const existingReservation = userReservations.find(
+        r => r.bookId === parseInt(id) && r.status === 'PENDING'
+      );
       
+      if (existingReservation) {
+        setReserveError('You already have an active reservation for this book');
+        return;
+      }
+
+      // Call the reserveService to create a reservation
+      await reserveService.createReserve(currentUser.id, id);
+      setReserveSuccess('Book reserved successfully. Check My Reservations to view status.');
+
+      // Refresh book details to update availability status
+      await fetchBookDetails();
+
     } catch (err) {
-      setReserveError(err.response?.data || 'Failed to reserve book. Please try again.');
+      console.error('Error reserving book:', err);
+      setReserveError(err.response?.data || err.message || 'Failed to reserve book. Please try again.');
     } finally {
       setReserveLoading(false);
     }

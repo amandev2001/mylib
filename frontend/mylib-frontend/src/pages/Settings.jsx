@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useDarkMode } from '../context/DarkModeContext';
-import { authService } from '../services/authService';
 
 function Settings() {
   const [settings, setSettings] = useState({
@@ -14,18 +13,12 @@ function Settings() {
       showProfile: true,
       showHistory: false,
       showActivity: true
-    },
-    preferences: {
-      language: 'English',
-      theme: 'system',
-      timezone: 'UTC'
     }
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const { isDarkMode } = useDarkMode();
-  const userRoles = authService.getUserRoles();
 
   const fetchSettings = async () => {
     try {
@@ -130,25 +123,6 @@ function Settings() {
                         : isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
                     }`}>
                       {value ? 'Public' : 'Private'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Preferences Section */}
-            <div>
-              <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Preferences
-              </h3>
-              <div className="space-y-4">
-                {Object.entries(settings.preferences).map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-center">
-                    <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} capitalize`}>
-                      {key}
-                    </span>
-                    <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {value}
                     </span>
                   </div>
                 ))}

@@ -276,7 +276,6 @@ function Books() {
           [bookId]: 'You already have an active reservation for this book' 
         }));
         
-        // Clear error message after 3 seconds
         setTimeout(() => {
           setReserveError(prev => ({ ...prev, [bookId]: null }));
         }, 3000);
@@ -287,18 +286,13 @@ function Books() {
       await reserveService.createReserve(currentUser.id, bookId);
       setReserveSuccess(prev => ({ 
         ...prev, 
-        [bookId]: 'Book reserved successfully. You will be notified when it becomes available.' 
+        [bookId]: 'Book reserved successfully. Check My Reservations to view status.' 
       }));
       
-      // Clear success message after 2 seconds and navigate to reservations
+      // Clear success message after 3 seconds
       setTimeout(() => {
         setReserveSuccess(prev => ({ ...prev, [bookId]: null }));
-        
-        // Ask user if they want to view their reservations
-        if (window.confirm('Reservation successful! Would you like to view your reservations?')) {
-          navigate('/my-reservations');
-        }
-      }, 2000);
+      }, 3000);
       
     } catch (err) {
       console.error('Error reserving book:', err);
@@ -307,7 +301,6 @@ function Books() {
         [bookId]: err.response?.data || err.message || 'Failed to reserve book. Please try again.' 
       }));
 
-      // Clear error message after 3 seconds
       setTimeout(() => {
         setReserveError(prev => ({ ...prev, [bookId]: null }));
       }, 3000);
@@ -469,23 +462,23 @@ function Books() {
                   ) : (
                     <button 
                       className={`flex-1 px-2 py-1.5 rounded-md transition-colors text-xs ${
-                        book.available && !borrowLoading[book.id]
+                        book.quantity > 0 && !borrowLoading[book.id]
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-300 text-gray-500'
+                          : isDarkMode 
+                            ? 'bg-amber-600 text-white hover:bg-amber-700' 
+                            : 'bg-amber-500 text-white hover:bg-amber-600'
                       }`}
-                      disabled={!book.available || borrowLoading[book.id]}
+                      disabled={borrowLoading[book.id]}
                       onClick={(e) => {
                         e.stopPropagation();
-                        book.available ? handleBorrow(book.id) : handleReserve(book.id);
+                        book.quantity > 0 ? handleBorrow(book.id) : handleReserve(book.id);
                       }}
                     >
                       {borrowLoading[book.id] 
                         ? 'Processing...' 
-                        : book.available 
+                        : book.quantity > 0
                           ? 'Borrow Now' 
-                          : book.quantity > 0 
-                            ? 'Not Available'
-                            : 'Reserve Book'
+                          : 'Reserve Book'
                       }
                     </button>
                   )}

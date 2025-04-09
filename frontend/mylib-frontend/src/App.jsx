@@ -26,7 +26,6 @@ import FineManagement from './components/admin/FineManagement';
 import Profile from './pages/Profile';
 import Help from './pages/Help';
 import Support from './pages/Support';
-import Settings from './pages/Settings';
 import PasswordReset from './components/common/PasswordReset';
 import Home from './pages/Home';
 import { SidebarProvider } from './context/SidebarContext';
@@ -209,14 +208,6 @@ function App() {
                     <Support />
                   </ProtectedLayout>
                 </ProtectedRoute>
-              } />
-
-              <Route path="/settings" element={
-                <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                  <ProtectedLayout>
-                    <Settings />
-                  </ProtectedLayout>
-                </RoleProtectedRoute>
               } />
 
               {/* Redirect any unknown routes to home */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   PlusIcon, 
@@ -16,7 +16,6 @@ import { loanService } from '../../services/loanService';
 import { reserveService } from '../../services/reserveService';
 import { useDarkMode } from '../../context/DarkModeContext';
 import EditBookModal from '../EditBookModal';
-import { formatDateForInput } from '../../utils/dateExtensions';
 
 export default function ManageBooks() {
   const navigate = useNavigate();
@@ -36,31 +35,7 @@ export default function ManageBooks() {
   const [selectedBook, setSelectedBook] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchBooks();
-  }, []);
-
-  useEffect(() => {
-    if (books.length > 0) {
-      fetchStats();
-    }
-  }, [books]);
-
-  const fetchBooks = async () => {
-    try {
-      setLoading(true);
-      const data = await bookService.getAllBooks();
-      setBooks(data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching books:', err);
-      setError('Failed to fetch books. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       // Get all loans and reservations for admin view
       const [allLoans, activeReservations] = await Promise.all([
@@ -69,8 +44,8 @@ export default function ManageBooks() {
       ]);
 
       // Filter active loans (not returned)
-      const activeLoans = allLoans.filter(loan => !loan.returnDate && loan.status === "PENDING");
-
+      const activeLoans = allLoans.filter(loan => !loan.returnDate && loan.status !== "PENDING");
+      console.log( "Loans" +activeLoans)
       const categories = new Set(books.map(book => book.category));
 
       setStats({
@@ -90,6 +65,30 @@ export default function ManageBooks() {
         reservedBooks: 0,
         totalCategories: new Set(books.map(book => book.category)).size
       });
+    }
+  }, [books]);
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  useEffect(() => {
+    if (books.length > 0) {
+      fetchStats();
+    }
+  }, [books, fetchStats]);
+
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      const data = await bookService.getAllBooks();
+      setBooks(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching books:', err);
+      setError('Failed to fetch books. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -255,81 +254,86 @@ export default function ManageBooks() {
       </div>
 
       {/* Books Table */}
-      <div className={`rounded-lg shadow overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                <button
-                  onClick={() => handleSort('title')}
-                  className="flex items-center gap-1"
-                >
-                  Title
-                  {sortConfig.key === 'title' && (
-                    sortConfig.direction === 'asc' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                <button
-                  onClick={() => handleSort('category')}
-                  className="flex items-center gap-1"
-                >
-                  Category
-                  {sortConfig.key === 'category' && (
-                    sortConfig.direction === 'asc' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                <button
-                  onClick={() => handleSort('quantity')}
-                  className="flex items-center gap-1"
-                >
-                  Quantity
-                  {sortConfig.key === 'quantity' && (
-                    sortConfig.direction === 'asc' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            {sortedBooks.map((book) => (
-              <tr key={book.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{book.title}</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{book.author}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-white">{book.category}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-white">{book.quantity}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    book.available
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {book.available ? 'Available' : 'Not Available'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => handleEdit(book)}
-                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    <PencilIcon className="h-5 w-5" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="overflow-hidden">
+        <div className="w-full overflow-x-auto">
+          <div className={`min-w-full rounded-lg shadow ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                    <button
+                      onClick={() => handleSort('title')}
+                      className="flex items-center gap-1"
+                    >
+                      Title
+                      {sortConfig.key === 'title' && (
+                        sortConfig.direction === 'asc' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
+                      )}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                    <button
+                      onClick={() => handleSort('category')}
+                      className="flex items-center gap-1"
+                    >
+                      Category
+                      {sortConfig.key === 'category' && (
+                        sortConfig.direction === 'asc' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
+                      )}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                    <button
+                      onClick={() => handleSort('quantity')}
+                      className="flex items-center gap-1"
+                    >
+                      Quantity
+                      {sortConfig.key === 'quantity' && (
+                        sortConfig.direction === 'asc' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
+                      )}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                {sortedBooks.map((book) => (
+                  <tr key={book.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">{book.title}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">{book.author}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 dark:text-white whitespace-nowrap">{book.category}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 dark:text-white whitespace-nowrap">{book.quantity}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-nowrap ${
+                        book.available
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {book.available ? 'Available' : 'Not Available'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleEdit(book)}
+                        className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                      >
+                        <PencilIcon className="h-4 w-4 mr-2" />
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {books.length === 0 && (
@@ -351,13 +355,7 @@ export default function ManageBooks() {
           }}
           onSubmit={handleUpdateBook}
           book={selectedBook}
-        >
-          <input
-            type="date"
-            value={formatDateForInput(selectedBook.publicationDate)}
-            onChange={(e) => handleBookChange('publicationDate', e.target.value)}
-          />
-        </EditBookModal>
+        />
       )}
     </div>
   );
