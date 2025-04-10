@@ -72,13 +72,13 @@ public class BorrowController {
 
     //  Get borrow history for a specific user (User & Admin)
     @GetMapping("/history/{userId}")
-    public ResponseEntity<List<BorrowRecord>> getBorrowHistory(@PathVariable Long userId) {
+    public ResponseEntity<List<BorrowRecordDTO>> getBorrowHistory(@PathVariable Long userId) {
         return ResponseEntity.ok(borrowService.getBorrowHistory(userId));
     }
 
     //  Get active borrows for a specific user (User & Admin)
     @GetMapping("/active/{userId}")
-    public ResponseEntity<List<BorrowRecord>> getActiveBorrows(@PathVariable Long userId) {
+    public ResponseEntity<List<BorrowRecordDTO>> getActiveBorrows(@PathVariable Long userId) {
         return ResponseEntity.ok(borrowService.getActiveBorrows(userId));
     }
 

@@ -1,5 +1,6 @@
 package com.example.mylib.dto;
 
+
 import com.example.mylib.enums.BorrowStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,16 +11,14 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BorrowRecordDTO {
-    private Long id;
-    private String userName;
-    private Long userId;
+public class FineDto {
+    private Long borrowRecordId;
     private Long bookId;
-    private String bookTitle;
+    private Long userId;
     private LocalDate issueDate;
     private LocalDate dueDate;
     private LocalDate returnDate;
     private double fineAmount;
     private BorrowStatus status;
-    private boolean finePaid;
+    private boolean paid;
 }

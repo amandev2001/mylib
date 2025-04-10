@@ -5,7 +5,7 @@ import { memberService } from '../services/memberService';
 import { authService } from '../services/authService';
 import MemberEditForm from '../components/MemberEditForm';
 
-const DEFAULT_PROFILE = '/book-covers/fiction-default.jpg.webp';
+const DEFAULT_PROFILE = '/default.jpg';
 
 function Profile() {
   const [profile, setProfile] = useState(null);

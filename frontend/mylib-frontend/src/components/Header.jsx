@@ -18,6 +18,9 @@ import { authService } from '../services/authService';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useSidebar } from '../context/SidebarContext';
 import { APP_NAME } from "../config";
+import { memberService } from '../services/memberService';
+
+const DEFAULT_PROFILE = '/images/default.png';
 
 function Header() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
@@ -30,7 +33,7 @@ function Header() {
   useEffect(() => {
     const fetchUserData = async () => {
       if (isAuthenticated) {
-        const user = await authService.getCurrentUser();
+        const user = await memberService.getCurrentMember();
         setCurrentUser(user);
         if (user?.roles) {
           // Remove 'ROLE_' prefix and capitalize first letter
@@ -123,8 +126,13 @@ function Header() {
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <UserCircleIcon className="h-6 w-6" />
-                  <span className="hidden md:block">{currentUser?.name || 'My Account'}</span>
+                  <img
+                    src={`${currentUser?.profilePic}` || DEFAULT_PROFILE}
+                    alt="user profile pic"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  {/* <UserCircleIcon className="h-6 w-6" />
+                  <span className="hidden md:block">{currentUser?.name || 'My Account'}</span> */}
                 </button>
 
                 {/* Dropdown Menu */}

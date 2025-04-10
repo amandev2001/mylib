@@ -11,13 +11,13 @@ import com.example.mylib.repository.BookRepo;
 import com.example.mylib.repository.BorrowRepo;
 import com.example.mylib.repository.UserRepo;
 import com.example.mylib.services.Reservation.ReservationService;
+import com.example.mylib.services.fine.FineCalculator;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,6 +31,7 @@ public class BorrowServiceImpl implements BorrowService {
     private final BookRepo bookRepo;
     private final ReservationService reservationService;
     private final ModelMapper modelMapper;
+    private final FineCalculator fineCalculator;
 
     @Override
     public boolean isEligibleToBorrow(Long userId, Long bookId) {
@@ -115,13 +116,13 @@ public class BorrowServiceImpl implements BorrowService {
         return borrowRepo.save(borrowRecord);
     }
 
-    private double calculateFine(LocalDate dueDate, LocalDate returnDate) {
-        if (dueDate.isBefore(returnDate)) {
-            long overdueDays = ChronoUnit.DAYS.between(dueDate, returnDate);
-            return overdueDays * AppConstants.FINE_PER_DAY;
-        }
-        return 0.0;
-    }
+//    private double calculateFine(LocalDate dueDate, LocalDate returnDate) {
+//        if (dueDate.isBefore(returnDate)) {
+//            long overdueDays = ChronoUnit.DAYS.between(dueDate, returnDate);
+//            return overdueDays * AppConstants.FINE_PER_DAY;
+//        }
+//        return 0.0;
+//    }
 
     @Override
     public void requestReturn(Long borrowRecordId) {
@@ -150,11 +151,7 @@ public class BorrowServiceImpl implements BorrowService {
         borrowRecord.setReturnDate(returnDate);
 
         // Calculate fine based on return date
-        double fineAmount = calculateFine(borrowRecord.getDueDate(), returnDate);
-        System.out.println("Fine Amount : " + fineAmount);
-        if (fineAmount > 0) {
-            borrowRecord.setFineAmount(fineAmount);
-        }
+        double fineAmount = fineCalculator.calculateFine(borrowRecord);
 
         // Mark as returned
         borrowRecord.setStatus(BorrowStatus.RETURNED);
@@ -170,14 +167,17 @@ public class BorrowServiceImpl implements BorrowService {
     }
 
     @Override
-    public List<BorrowRecord> getBorrowHistory(Long userId) {
-        return borrowRepo.findByUserId(userId);
+    public List<BorrowRecordDTO> getBorrowHistory(Long userId) {
+        List<BorrowRecord> records = borrowRepo.findByUserId(userId);
+        return records.stream().map(this::convertToDTO).toList();
     }
 
     @Override
-    public List<BorrowRecord> getActiveBorrows(Long userId) {
-        return borrowRepo.findByUserIdAndStatus(userId, BorrowStatus.BORROWED);
+    public List<BorrowRecordDTO> getActiveBorrows(Long userId) {
+        List<BorrowRecord> records = borrowRepo.findByUserIdAndStatus(userId, BorrowStatus.BORROWED);
+        return records.stream().map(this::convertToDTO).toList();
     }
+
 
     @Override
     public List<BorrowRecordDTO> getAllBorrows() {
@@ -260,8 +260,7 @@ public class BorrowServiceImpl implements BorrowService {
             if (borrowRecord.getDueDate() != null && borrowRecord.getReturnDate() != null &&
                     borrowRecord.getReturnDate().isAfter(borrowRecord.getDueDate())) {
 
-                double fineAmount = calculateFine(borrowRecord.getDueDate(), borrowRecord.getReturnDate());
-                System.out.println("Fine Amount : " + fineAmount);
+                double fineAmount = fineCalculator.calculateFine(borrowRecord);
                 borrowRecord.setFineAmount(fineAmount);
             }
             return borrowRepo.save(borrowRecord);
@@ -277,5 +276,21 @@ public class BorrowServiceImpl implements BorrowService {
         }
     }
 
+
+    public BorrowRecordDTO convertToDTO(BorrowRecord record) {
+        BorrowRecordDTO dto = new BorrowRecordDTO();
+
+        dto.setId(record.getId());
+        dto.setUserName(record.getUser().getName());
+        dto.setBookId(record.getBook().getId());
+        dto.setBookTitle(record.getBook().getTitle());
+        dto.setIssueDate(record.getIssueDate());
+        dto.setDueDate(record.getDueDate());
+        dto.setReturnDate(record.getReturnDate());
+        dto.setFineAmount(record.getFineAmount());
+        dto.setStatus(record.getStatus());
+
+        return dto;
+    }
 
 }

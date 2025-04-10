@@ -22,10 +22,10 @@ public interface BorrowService {
     void approveReturnRequest(Long borrowRecordId); // Admin
 
     // Both User and Admin can see borrow history of a specific user
-    List<BorrowRecord> getBorrowHistory(Long userId); // User & Admin
+    List<BorrowRecordDTO> getBorrowHistory(Long userId); // User & Admin
 
     // Get active borrows for a specific user (User & Admin)
-    List<BorrowRecord> getActiveBorrows(Long userId); // User & Admin
+    List<BorrowRecordDTO> getActiveBorrows(Long userId); // User & Admin
 
     // Only Admin can see all borrow records in the library
     public List<BorrowRecordDTO> getAllBorrows(); // Admin

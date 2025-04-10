@@ -34,7 +34,7 @@ function Login() {
       await authService.login(credentials);
       navigate("/books"); // Redirect to dashboard after successful login
     } catch (err) {
-      const errorMessage = err.message || "Failed to login. Please try again.";
+      const errorMessage = err.response || "Failed to login. Please try again.";
       setError(errorMessage);
       console.error("Login error:", err);
     } finally {

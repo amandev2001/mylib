@@ -140,9 +140,7 @@ public class UserController {
         } catch (Exception e) {
             logger.error("Login failed for user: {}", userLoginDTO.getEmail(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of(
-                            "error", "Login failed",
-                            "message", e.getMessage()));
+                    .body("Login Failed");
         }
     }
 
@@ -447,7 +445,7 @@ public class UserController {
     }
 
     @PostMapping("{userId}/profile-image")
-public ResponseEntity<?> uploadProfilePicUrl(@PathVariable Long userId,
+    public ResponseEntity<?> uploadProfilePicUrl(@PathVariable Long userId,
                                              @RequestParam(value = "file", required = false) MultipartFile profileImage) {
     try {
         // Retrieve the user by userId

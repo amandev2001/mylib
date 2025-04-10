@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { formatDate } from '../../utils/dateExtensions';
+import { fineService } from '../../services/fineService';
 
 export default function FineManagement() {
   const { isDarkMode } = useDarkMode();
@@ -32,10 +33,24 @@ export default function FineManagement() {
   const fetchFines = async () => {
     try {
       setLoading(true);
-      // TODO: Implement API call to fetch fines
-      // const response = await fineService.getAllFines();
-      // setFines(response.data);
-      // calculateStats(response.data);
+      const response = await fineService.getAllFines();
+      
+      // Transform the data to match the expected format
+      const transformedFines = response.map(fine => ({
+        id: fine.borrowRecordId,
+        userName: `User ID: ${fine.userId}`, // Using userId directly
+        bookTitle: `Book ID: ${fine.bookId}`, // Using bookId directly
+        amount: fine.fineAmount,
+        dueDate: fine.dueDate,
+        status: fine.paid ? 'PAID' : 'PENDING',
+        borrowRecordId: fine.borrowRecordId,
+        userId: fine.userId,
+        bookId: fine.bookId,
+        returnStatus: fine.status // Keep the original RETURNED status
+      }));
+      
+      setFines(transformedFines);
+      calculateStats(transformedFines);
     } catch (err) {
       console.error('Error fetching fines:', err);
       setError('Failed to load fines. Please try again later.');
@@ -56,6 +71,29 @@ export default function FineManagement() {
       pendingFines,
       totalAmount
     });
+  };
+  
+  const markAsPaid = async (borrowRecordId) => {
+    try {
+      await fineService.markFineAsPaid(borrowRecordId);
+      
+      // Update UI after successful API call
+      const updatedFines = fines.map(fine => 
+        fine.borrowRecordId === borrowRecordId 
+          ? { ...fine, status: 'PAID' } 
+          : fine
+      );
+      
+      setFines(updatedFines);
+      calculateStats(updatedFines);
+      
+    } catch (err) {
+      console.error('Error marking fine as paid:', err);
+      // Show error message
+      setError('Failed to mark fine as paid. Please try again.');
+      // Clear error after 3 seconds
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const handleSort = (key) => {
@@ -149,7 +187,7 @@ export default function FineManagement() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search by user or book..."
+            placeholder="Search by user or book ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`w-full px-4 py-2 rounded-lg border ${
@@ -212,9 +250,16 @@ export default function FineManagement() {
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSort('returnStatus')}
+              >
+                Return Status
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort('status')}
               >
-                Status
+                Payment Status
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 Actions
@@ -224,7 +269,7 @@ export default function FineManagement() {
           <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             {loading ? (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center">
+                <td colSpan="7" className="px-6 py-4 text-center">
                   <div className="flex justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                   </div>
@@ -232,13 +277,13 @@ export default function FineManagement() {
               </tr>
             ) : error ? (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-red-500">
+                <td colSpan="7" className="px-6 py-4 text-center text-red-500">
                   {error}
                 </td>
               </tr>
             ) : sortedFines.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                   No fines found
                 </td>
               </tr>
@@ -262,8 +307,17 @@ export default function FineManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                      {formatDate(fine.dueDate)}
+                      {fine.dueDate}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      fine.returnStatus === 'RETURNED'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                    }`}>
+                      {fine.returnStatus}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -275,12 +329,19 @@ export default function FineManagement() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => {/* TODO: Implement mark as paid */}}
-                      className={`text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300`}
-                    >
-                      Mark as Paid
-                    </button>
+                    {fine.status !== 'PAID' && (
+                      <button
+                        onClick={() => markAsPaid(fine.borrowRecordId)}
+                        className={`text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300`}
+                      >
+                        Mark as Paid
+                      </button>
+                    )}
+                    {fine.status === 'PAID' && (
+                      <span className={`text-gray-400 dark:text-gray-500`}>
+                        Paid
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))

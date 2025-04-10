@@ -35,6 +35,7 @@ public class BorrowRecord {
     private LocalDate dueDate;
     private LocalDate returnDate;
     private double fineAmount;
+    private boolean finePaid;
 
     @Enumerated(EnumType.STRING)
     private BorrowStatus status;

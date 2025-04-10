@@ -1,17 +1,18 @@
-import { Link } from 'react-router-dom';
-import { 
-  BookOpenIcon, 
-  SunIcon, 
+import { Link } from "react-router-dom";
+import {
+  BookOpenIcon,
+  SunIcon,
   MoonIcon,
   UserCircleIcon,
   BookmarkIcon,
   Cog6ToothIcon,
   BookOpenIcon as BookIcon,
-} from '@heroicons/react/24/outline';
-import { useState, useEffect } from 'react';
-import { useDarkMode } from '../context/DarkModeContext';
-import { authService } from '../services/authService';
+} from "@heroicons/react/24/outline";
+import { useState, useEffect } from "react";
+import { useDarkMode } from "../context/DarkModeContext";
+import { authService } from "../services/authService";
 import { APP_NAME } from "../config";
+import { memberService } from "../services/memberService";
 
 function PublicNavbar({ isDarkMode }) {
   const { toggleDarkMode } = useDarkMode();
@@ -23,12 +24,13 @@ function PublicNavbar({ isDarkMode }) {
   useEffect(() => {
     const fetchUserData = async () => {
       if (isAuthenticated) {
-        const user = await authService.getCurrentUser();
+        const user = await memberService.getCurrentMember();
         setCurrentUser(user);
         if (user?.roles) {
-          const formattedRoles = user.roles.map(role => 
-            role.replace('ROLE_', '').charAt(0).toUpperCase() + 
-            role.replace('ROLE_', '').slice(1).toLowerCase()
+          const formattedRoles = user.roles.map(
+            (role) =>
+              role.replace("ROLE_", "").charAt(0).toUpperCase() +
+              role.replace("ROLE_", "").slice(1).toLowerCase()
           );
           setUserRoles(formattedRoles);
         }
@@ -39,30 +41,42 @@ function PublicNavbar({ isDarkMode }) {
 
   const handleLogout = () => {
     authService.logout();
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   const handleClickOutside = (event) => {
-    if (isProfileMenuOpen && !event.target.closest('.profile-menu')) {
+    if (isProfileMenuOpen && !event.target.closest(".profile-menu")) {
       setIsProfileMenuOpen(false);
     }
   };
 
   useEffect(() => {
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [isProfileMenuOpen]);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} shadow-md`}>
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 ${
+        isDarkMode ? "bg-gray-900" : "bg-white"
+      } shadow-md`}
+    >
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <BookOpenIcon className={`h-8 w-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-            <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <BookOpenIcon
+              className={`h-8 w-8 ${
+                isDarkMode ? "text-blue-400" : "text-blue-600"
+              }`}
+            />
+            <span
+              className={`text-xl font-bold ${
+                isDarkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
               {APP_NAME}
             </span>
           </Link>
@@ -72,7 +86,9 @@ function PublicNavbar({ isDarkMode }) {
             <button
               onClick={toggleDarkMode}
               className={`p-2 rounded-lg ${
-                isDarkMode ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-600 hover:bg-gray-100'
+                isDarkMode
+                  ? "text-gray-300 hover:bg-gray-800"
+                  : "text-gray-600 hover:bg-gray-100"
               } transition-colors`}
             >
               {isDarkMode ? (
@@ -87,21 +103,33 @@ function PublicNavbar({ isDarkMode }) {
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className={`flex items-center space-x-2 p-2 rounded-lg ${
-                    isDarkMode ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
+                    isDarkMode
+                      ? "text-gray-300 hover:bg-gray-800"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <UserCircleIcon className="h-6 w-6" />
-                  <span className="hidden md:block">{currentUser?.name || 'My Account'}</span>
+                  <img
+                    src={`${currentUser?.profilePic}`}
+                    alt="user profile pic"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  {/* <span className="hidden md:block">
+                    {currentUser?.name || "My Account"}
+                  </span> */}
                 </button>
 
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{currentUser?.name}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{currentUser?.email}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {currentUser?.name}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {currentUser?.email}
+                      </p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {userRoles.map((role, index) => (
-                          <span 
+                          <span
                             key={index}
                             className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
                           >
