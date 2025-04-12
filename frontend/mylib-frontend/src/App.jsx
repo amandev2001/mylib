@@ -35,6 +35,7 @@ import PasswordReset from "./components/common/PasswordReset";
 import Home from "./pages/Home";
 import { SidebarProvider } from "./context/SidebarContext";
 import { useSidebar } from "./context/SidebarContext";
+import About from "./pages/About";
 
 // Layout wrapper component for protected routes
 const ProtectedLayout = ({ children }) => {
@@ -84,6 +85,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/reset-password" element={<PasswordReset />} />
+              <Route path="/about" element={<About />} />
+
 
               {/* Protected routes with shared layout */}
               <Route
@@ -262,11 +265,11 @@ function App() {
               <Route
                 path="/help"
                 element={
-                  <ProtectedRoute>
+                
                     <ProtectedLayout>
                       <Help />
                     </ProtectedLayout>
-                  </ProtectedRoute>
+                 
                 }
               />
 

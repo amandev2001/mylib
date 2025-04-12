@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { reserveService } from '../../services/reserveService';
 import { formatDate } from '../../utils/dateExtensions';
 import { useDarkMode } from '../../context/DarkModeContext';
+import  usePageTitle  from "../../utils/useTitle";
 
 export default function ReservationManagement() {
   const [reservations, setReservations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { isDarkMode } = useDarkMode();
+
+  usePageTitle("Reservation Management");
 
   const loadReservations = useCallback(async () => {
     try {

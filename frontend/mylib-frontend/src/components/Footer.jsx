@@ -7,7 +7,7 @@ function Footer() {
   const links = {
     quickLinks: [
       { name: 'About Us', path: '/about' },
-      { name: 'Contact', path: '/contact' },
+      { name: 'Contact', path: '/support' },
       { name: 'Help Center', path: '/help' },
       { name: 'Privacy Policy', path: '/privacy' },
     ],
@@ -17,12 +17,13 @@ function Footer() {
       { name: 'Research Guides', path: '/research' },
       { name: 'Academic Journals', path: '/journals' },
     ],
-    connect: [
-      { name: 'Facebook', path: '#' },
-      { name: 'Twitter', path: '#' },
-      { name: 'Instagram', path: '#' },
-      { name: 'LinkedIn', path: '#' },
+    connect : [
+      { name: 'Facebook', path: 'https://www.facebook.com/patnauniversityofficial/', target: '_blank' },
+      { name: 'Twitter', path: 'https://twitter.com/patnauniversityofficial', target: '_blank' },
+      { name: 'Instagram', path: '#', target: '_blank' }, // No official Instagram found
+      { name: 'LinkedIn', path: 'https://www.linkedin.com/school/patna-university-/?originalSubdomain=in', target: '_blank' },
     ]
+    
   };
 
   return (
@@ -71,7 +72,7 @@ function Footer() {
             <ul className="space-y-2">
               {links.connect.map((link) => (
                 <li key={link.name}>
-                  <Link to={link.path} className={`hover:text-blue-600 transition-colors ${isDarkMode ? 'hover:text-blue-400' : ''}`}>
+                  <Link to={link.path} target='link.target' className={`hover:text-blue-600 transition-colors ${isDarkMode ? 'hover:text-blue-400' : ''}`}>
                     {link.name}
                   </Link>
                 </li>

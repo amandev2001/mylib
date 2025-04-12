@@ -3,8 +3,12 @@ import { reserveService } from '../../services/reserveService';
 import { formatDate } from '../../utils/dateExtensions';
 import { authService } from '../../services/authService';
 import { useDarkMode } from '../../context/DarkModeContext';
+import  usePageTitle  from "../../utils/useTitle";
 
 export default function MyReservations() {
+
+  usePageTitle("My Reservations");
+
   const [reservations, setReservations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);

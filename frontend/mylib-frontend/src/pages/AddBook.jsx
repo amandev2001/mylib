@@ -5,8 +5,10 @@ import axios from 'axios';
 import ImagePreview from '../components/common/ImagePreview';
 import { bookService } from '../services/bookService';
 import { useDarkMode } from '../context/DarkModeContext';
+import  usePageTitle  from "../utils/useTitle";
 
 export default function AddBook() {
+  usePageTitle("Add New Book");
   const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
   const [bookData, setBookData] = useState({

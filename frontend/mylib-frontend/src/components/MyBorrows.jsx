@@ -20,6 +20,7 @@ import { loanService } from '../services/loanService';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../utils/dateExtensions';
 import { useDarkMode } from '../context/DarkModeContext';
+import  usePageTitle  from "../utils/useTitle";
 import { 
   ArrowPathIcon, 
   CheckIcon, 
@@ -31,6 +32,8 @@ import {
 import FormattedDate from './common/FormattedDate';
 
 const MyBorrows = () => {
+
+  usePageTitle("My Borrows");
   const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
   const [borrows, setBorrows] = useState([]);

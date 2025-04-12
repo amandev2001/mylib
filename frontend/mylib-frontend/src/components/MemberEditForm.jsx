@@ -185,10 +185,11 @@ const MemberEditForm = ({
             <input
               type="email"
               id="email"
+              disabled
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={`mt-1 block w-full px-4 py-3 rounded-md ${
+              className={`cursor-not-allowed mt-1 block w-full px-4 py-3 rounded-md ${
                 isDarkMode 
                   ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
                   : 'border-gray-300 focus:border-blue-500'

@@ -11,8 +11,10 @@ import {
 import { useDarkMode } from '../../context/DarkModeContext';
 import { authService } from '../../services/authService';
 import { formatDate } from '../../utils/dateExtensions';
+import  usePageTitle  from "../../utils/useTitle";
 
 export default function FinesAndPayments() {
+  usePageTitle("Fines and Payment");
   const { isDarkMode } = useDarkMode();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

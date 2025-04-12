@@ -1,120 +1,312 @@
-import React, { useState } from 'react';
-import { toast } from 'react-toastify';
-import { Box, Button, TextField, Typography, Paper, CircularProgress, Alert } from '@mui/material';
-import { authService } from '../../services/authService';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import { authService } from "../../services/authService";
+import { useDarkMode } from "../../context/DarkModeContext";
+import { APP_NAME } from "../../config";
+import Footer from "../../components/Footer";
+import PublicNavbar from "../../components/PublicNavbar";
 
-const PasswordReset = () => {
-    const [email, setEmail] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+function ResetPassword() {
+  const appName = APP_NAME;
+  const [successMessage, setSuccessMessage] = useState("");
+  const { isDarkMode } = useDarkMode();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
+  const [formData, setFormData] = useState({
+    email: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-        if (newPassword !== confirmPassword) {
-            setError('Passwords do not match');
-            return;
-        }
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        if (newPassword.length < 8) {
-            setError('Password must be at least 8 characters long');
-            return;
-        }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-        try {
-            setLoading(true);
-            await authService.resetPassword(email, newPassword); // Use authService
-            toast.success('Password reset successfully');
-            setEmail('');
-            setNewPassword('');
-            setConfirmPassword('');
-        } catch (err) {
-            setError(err.message);
-            toast.error(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '100vh',
-                bgcolor: '#f5f5f5'
-            }}
+    // Validation
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (formData.newPassword.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await authService.resetPassword(formData.email, formData.newPassword);
+      setSuccessMessage(
+        "Password reset successfully. You can now login with your new password."
+      );
+      setError(""); // Clear any previous errors
+      setFormData({
+        email: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      // You can keep the toast.success if you want both
+      toast.success("Password reset successfully");
+    } catch (err) {
+      setSuccessMessage(""); // Clear any previous success message
+      const errorMessage =
+        err.response ||
+        err.message ||
+        "Failed to reset password. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false); // Ensure loading state is reset whether the request succeeds or fails
+    }
+  };
+
+  return (
+    <div className="min-h-screen">
+      <PublicNavbar isDarkMode={isDarkMode} />
+      <div
+        className={`pt-16 min-h-screen flex items-center justify-center ${
+          isDarkMode
+            ? "bg-gradient-to-r from-gray-900 to-gray-800"
+            : "bg-gradient-to-r from-blue-100 to-blue-50"
+        } py-12 px-4 sm:px-6 lg:px-8`}
+      >
+        <div
+          className={`max-w-md w-full ${
+            isDarkMode ? "bg-gray-800" : "bg-white"
+          } rounded-xl shadow-2xl p-8 space-y-8`}
         >
-            <Paper
-                elevation={3}
-                sx={{
-                    p: 4,
-                    width: '100%',
-                    maxWidth: 400,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2
-                }}
+          <div className="text-center">
+            <h1
+              className={`text-4xl font-bold ${
+                isDarkMode ? "text-white" : "text-gray-900"
+              } mb-2`}
             >
-                <Typography variant="h5" component="h1" gutterBottom>
-                    Reset User Password
-                </Typography>
+              {appName}
+            </h1>
+            <h2
+              className={`text-2xl font-semibold ${
+                isDarkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Reset Password
+            </h2>
+            <p
+              className={`mt-2 text-sm ${
+                isDarkMode ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Enter your email and create a new password
+            </p>
+          </div>
+          <form
+            className="mt-8 space-y-6"
+            onSubmit={handleSubmit}
+            autoComplete="on"
+          >
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="email"
+                  className={`block text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="username email"
+                  className={`mt-1 block w-full px-3 py-2 border ${
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "border-gray-300 placeholder-gray-400"
+                  } rounded-md shadow-sm 
+                         focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="newPassword"
+                  className={`block text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  New Password
+                </label>
+                <input
+                  id="newPassword"
+                  name="newPassword"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  minLength="8"
+                  className={`mt-1 block w-full px-3 py-2 border ${
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "border-gray-300 placeholder-gray-400"
+                  } rounded-md shadow-sm 
+                         focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  placeholder="Enter new password"
+                  value={formData.newPassword}
+                  onChange={handleChange}
+                />
+                <p
+                  className={`mt-1 text-xs ${
+                    isDarkMode ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Password must be at least 8 characters long
+                </p>
+              </div>
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className={`block text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  minLength="8"
+                  className={`mt-1 block w-full px-3 py-2 border ${
+                    isDarkMode
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "border-gray-300 placeholder-gray-400"
+                  } rounded-md shadow-sm 
+                         focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
 
-                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {error && (
+              <div
+                className={`p-4 rounded-md ${
+                  isDarkMode
+                    ? "bg-red-900 text-red-100"
+                    : "bg-red-50 text-red-700"
+                }`}
+              >
+                {error}
+              </div>
+            )}
 
-                <form onSubmit={handleSubmit}>
-                    <TextField
-                        fullWidth
-                        label="User Email"
-                        variant="outlined"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        margin="normal"
-                    />
+            {successMessage && (
+              <div
+                className={`p-4 rounded-md ${
+                  isDarkMode
+                    ? "bg-green-900 text-green-100"
+                    : "bg-green-50 text-green-700"
+                }`}
+              >
+                {successMessage}
+              </div>
+            )}
 
-                    <TextField
-                        fullWidth
-                        label="New Password"
-                        type="password"
-                        variant="outlined"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                        margin="normal"
-                        helperText="Password must be at least 8 characters long"
-                    />
-
-                    <TextField
-                        fullWidth
-                        label="Confirm New Password"
-                        type="password"
-                        variant="outlined"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        margin="normal"
-                        helperText="Re-enter the new password"
-                    />
-
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        disabled={loading}
-                        sx={{ mt: 3 }}
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                       bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                       disabled:bg-blue-300 disabled:cursor-not-allowed transform transition duration-100 hover:scale-[1.02]"
+              >
+                {loading ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
                     >
-                        {loading ? <CircularProgress size={24} color="inherit" /> : 'Reset Password'}
-                    </Button>
-                </form>
-            </Paper>
-        </Box>
-    );
-};
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Resetting...
+                  </div>
+                ) : (
+                  "Reset Password"
+                )}
+              </button>
+            </div>
 
-export default PasswordReset;
+            <div className="text-center text-sm">
+              <span
+                className={`${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+              >
+                Remember your password?{" "}
+              </span>
+              <Link
+                to="/login"
+                className={`font-medium ${
+                  isDarkMode
+                    ? "text-blue-400 hover:text-blue-300"
+                    : "text-blue-600 hover:text-blue-500"
+                } hover:underline`}
+              >
+                Log in
+              </Link>
+            </div>
+            <div className="text-center text-sm">
+              <span
+                className={`${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+              >
+                Don't have an account?{" "}
+              </span>
+              <Link
+                to="/register"
+                className={`font-medium ${
+                  isDarkMode
+                    ? "text-blue-400 hover:text-blue-300"
+                    : "text-blue-600 hover:text-blue-500"
+                } hover:underline`}
+              >
+                Register here
+              </Link>
+            </div>
+          </form>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+export default ResetPassword;

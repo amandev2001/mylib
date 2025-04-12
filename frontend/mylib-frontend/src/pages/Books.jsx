@@ -12,6 +12,7 @@ import ImagePreview from '../components/common/ImagePreview';
 import { reserveService } from '../services/reserveService';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import  usePageTitle  from "../utils/useTitle";
 
 // Default book cover images for different categories
 const DEFAULT_COVERS = {
@@ -30,6 +31,7 @@ const ROLES = {
 };
 
 function Books() {
+  usePageTitle("All Books");
   const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
   const [searchQuery, setSearchQuery] = useState('');

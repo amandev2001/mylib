@@ -4,17 +4,19 @@ import { useDarkMode } from '../context/DarkModeContext';
 import { memberService } from '../services/memberService';
 import { authService } from '../services/authService';
 import MemberEditForm from '../components/MemberEditForm';
+import  usePageTitle  from "../utils/useTitle";
 
-const DEFAULT_PROFILE = '/default.jpg';
+const DEFAULT_PROFILE = '/images/default.png';
 
 function Profile() {
   const [profile, setProfile] = useState(null);
+  usePageTitle("Profile",profile?.name);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const { isDarkMode } = useDarkMode();
   const userRoles = authService.getUserRoles();
-
+  
   const fetchProfile = async () => {
     try {
       setLoading(true);
@@ -28,11 +30,11 @@ function Profile() {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     fetchProfile();
   }, []);
-
+  
   const handleImageError = (e) => {
     e.target.onerror = null;
     e.target.src = DEFAULT_PROFILE;
@@ -45,7 +47,7 @@ function Profile() {
       </div>
     );
   }
-
+  
   if (error) {
     return (
       <div className={`text-center ${isDarkMode ? 'text-red-400' : 'text-red-600'} p-4`}>

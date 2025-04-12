@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { useDarkMode } from '../context/DarkModeContext';
+import  usePageTitle  from "../utils/useTitle";
 
 const faqs = [
   {
@@ -26,6 +27,7 @@ const faqs = [
 ];
 
 function Help() {
+  usePageTitle("Help Center");
   const { isDarkMode } = useDarkMode();
   const [openIndex, setOpenIndex] = useState(null);
   const [loading, setLoading] = useState(false);

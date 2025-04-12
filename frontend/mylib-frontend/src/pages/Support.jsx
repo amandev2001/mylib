@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { EnvelopeIcon, PhoneIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
 import { useDarkMode } from '../context/DarkModeContext';
+import  usePageTitle  from "../utils/useTitle";
 
 function Support() {
+  usePageTitle("Help", "Support");
   const { isDarkMode } = useDarkMode();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -78,10 +80,10 @@ function Support() {
                   <PhoneIcon className={`h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} mr-2`} />
                   <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>+1 (555) 123-4567</span>
                 </div>
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <ChatBubbleLeftIcon className={`h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} mr-2`} />
                   <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Live chat available 24/7</span>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

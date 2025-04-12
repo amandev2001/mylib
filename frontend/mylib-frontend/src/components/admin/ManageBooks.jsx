@@ -16,8 +16,12 @@ import { loanService } from '../../services/loanService';
 import { reserveService } from '../../services/reserveService';
 import { useDarkMode } from '../../context/DarkModeContext';
 import EditBookModal from '../EditBookModal';
+// import  usePageTitle  from "../utils/useTitle";
 
 export default function ManageBooks() {
+
+  // usePageTitle("Manage Books");
+
   const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
   const [books, setBooks] = useState([]);
@@ -67,6 +71,18 @@ export default function ManageBooks() {
       });
     }
   }, [books]);
+
+  const handleDeleteBook = async (bookId) => {
+    try {
+      await bookService.deleteBook(bookId);
+      await fetchBooks(); // Refresh the books list
+      setIsEditModalOpen(false);
+      setSelectedBook(null);
+    } catch (err) {
+      console.error('Error deleting book:', err);
+      // You might want to handle error display here
+    }
+  };
 
   useEffect(() => {
     fetchBooks();
@@ -348,14 +364,15 @@ export default function ManageBooks() {
       {/* Edit Book Modal */}
       {selectedBook && (
         <EditBookModal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setSelectedBook(null);
-          }}
-          onSubmit={handleUpdateBook}
-          book={selectedBook}
-        />
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedBook(null);
+        }}
+        onSubmit={handleUpdateBook}
+        onDelete={handleDeleteBook}  
+        book={selectedBook}
+      />
       )}
     </div>
   );

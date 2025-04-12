@@ -29,6 +29,7 @@ import {
 import { authService } from "../services/authService";
 import { useEffect, useState } from "react";
 import { useDarkMode } from '../context/DarkModeContext';
+
 import { useSidebar } from '../context/SidebarContext';
 
 // Role constants
@@ -42,6 +43,7 @@ const ROLES = {
 function Navbar() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const { isSidebarOpen, toggleSidebar } = useSidebar();
+  const isAuthenticated = authService.isAuthenticated();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -103,11 +105,14 @@ function Navbar() {
         <nav className="h-full overflow-y-auto px-4 py-4">
           <div className="space-y-6">
             {/* Dashboard Section for All Users */}
+            {isAuthenticated && (
             <div>
               <NavLink to="/books" icon={BookOpenIcon}>
                 Books
               </NavLink>
             </div>
+
+            )}
 
             {/* Admin/Librarian Section */}
             {(isAdmin || isLibrarian) && (
@@ -194,6 +199,7 @@ function Navbar() {
             </div>
 
             {/* Logout Button */}
+            {isAuthenticated && (
             <div className="pt-6">
               <button
                 onClick={handleLogout}
@@ -203,6 +209,8 @@ function Navbar() {
                 Logout
               </button>
             </div>
+
+            )}
           </div>
         </nav>
       </aside>

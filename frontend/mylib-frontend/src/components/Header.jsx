@@ -12,6 +12,7 @@ import {
   ClipboardDocumentListIcon,
   ShieldCheckIcon,
   Bars3Icon,
+  ClipboardIcon,
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
@@ -28,6 +29,7 @@ function Header() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
+  // console.log(`roles: ${userRoles}`);
   const isAuthenticated = authService.isAuthenticated();
 
   useEffect(() => {
@@ -35,9 +37,9 @@ function Header() {
       if (isAuthenticated) {
         const user = await memberService.getCurrentMember();
         setCurrentUser(user);
-        if (user?.roles) {
+        if (user?.roleList) {
           // Remove 'ROLE_' prefix and capitalize first letter
-          const formattedRoles = user.roles.map(role => 
+          const formattedRoles = user.roleList.map(role => 
             role.replace('ROLE_', '').charAt(0).toUpperCase() + 
             role.replace('ROLE_', '').slice(1).toLowerCase()
           );
@@ -66,7 +68,9 @@ function Header() {
     };
   }, [isProfileMenuOpen]);
 
-  const isAdmin = currentUser?.roles?.some(role => role === 'ROLE_ADMIN');
+  const isAdmin = currentUser?.roleList?.some(role => role === 'ROLE_ADMIN');
+  console.log(currentUser?.profilePic + "this is admin");
+  
 
   return (
     <header className="fixed top-0 left-0 w-full h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30">
@@ -175,17 +179,17 @@ function Header() {
                           to="/loans"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
-                          <ShieldCheckIcon className="h-5 w-5 mr-3" />
+                          <ClipboardDocumentListIcon className="h-5 w-5 mr-3" />
                           Loan Management
                         </Link>
                       )}
-                      <Link
+                      {/* <Link
                         to="/my-borrows"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <BookOpenIcon className="h-5 w-5 mr-3" />
                         My Borrowed Books
-                      </Link>
+                      </Link> */}
                       {/* <Link
                         to="/reading-list"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"

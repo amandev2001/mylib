@@ -35,7 +35,7 @@ public class Users {
 
     private String about;
 
-    private String profilePic = "static/images/default.png";
+    private String profilePic = "https://res.cloudinary.com/djrvkyaq4/image/upload/v1744352983/default_qoniz2.png";
 
     private String phoneNumber;
 

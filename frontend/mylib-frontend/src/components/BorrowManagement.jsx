@@ -19,6 +19,7 @@ import api from '../services/api';
 import { authService } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../utils/dateExtensions';
+import  usePageTitle  from "../utils/useTitle";
 import { useDarkMode } from '../context/DarkModeContext';
 
 // Role constants matching backend
@@ -28,6 +29,7 @@ const ROLES = {
 };
 
 const BorrowManagement = () => {
+  usePageTitle("Borrow Management");
   const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
   const [borrows, setBorrows] = useState([]);
