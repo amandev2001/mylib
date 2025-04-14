@@ -2,9 +2,9 @@ package com.example.mylib.config;
 
 import com.example.mylib.exceptions.CustomAccessDeniedHandler;
 import com.example.mylib.exceptions.CustomAuthenticationEntryPoint;
-import com.example.mylib.payload.AppConstants;
 import com.example.mylib.services.User.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,6 +25,12 @@ import java.util.Arrays;
 @Configuration
 public class SecurityConfig {
 
+    @Value("${cors.allowed.origins}")
+    private String allowedOrigins;
+
+    @Value("${jwt.secret}")
+    private String jwtSecretKey;
+
     @Autowired
     private MyUserDetailsService myUserDetailsService;
 
@@ -36,7 +42,6 @@ public class SecurityConfig {
 
     @Autowired
     private CustomAuthenticationEntryPoint authenticationEntryPoint;
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -66,7 +71,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174"));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
@@ -87,13 +92,11 @@ public class SecurityConfig {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setPasswordEncoder(bCryptPasswordEncoder());
         provider.setUserDetailsService(myUserDetailsService);
-        System.out.println("Setting up authentication provider with BCrypt encoder");
         return provider;
     }
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
-        System.out.println("Creating BCryptPasswordEncoder with strength 10");
         return new BCryptPasswordEncoder(10);
     }
 }

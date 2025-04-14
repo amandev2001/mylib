@@ -5,10 +5,10 @@ import com.example.mylib.services.User.MyUserDetailsService;
 import com.example.mylib.entities.Users;
 import com.example.mylib.services.User.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,16 +17,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class AuthController {
 
-    @Autowired
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -40,13 +36,16 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    // Injecting CORS allowed origins from properties
+    @Value("${cors.allowed.origins}")
+    private String corsAllowedOrigins;
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Users user) {
         try {
             Users registeredUser = userService.saveUser(user);
             return ResponseEntity.ok(registeredUser);
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -62,7 +61,8 @@ public class AuthController {
                 String username = jwtService.extractUsername(token);
                 logger.info("Extracted username from token: {}", username);
 
-                Users user = userService.getUserByEmail(username).orElseThrow(() -> new UsernameNotFoundException(username));
+                Users user = userService.getUserByEmail(username)
+                        .orElseThrow(() -> new UsernameNotFoundException(username));
                 if (user == null) {
                     logger.warn("User not found for username: {}", username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
@@ -76,8 +76,7 @@ public class AuthController {
 
                 return ResponseEntity.ok(Map.of("token", newToken, "email", user.getEmail()));
 
-            } catch (
-                    Exception e) {
+            } catch (Exception e) {
                 logger.error("Token refresh failed: {}", e.getMessage(), e);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
             }
@@ -87,5 +86,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization header not found");
     }
 
+    // Getters and Setters if needed for further dynamic access
+    public String getCorsAllowedOrigins() {
+        return corsAllowedOrigins;
+    }
 
+    public void setCorsAllowedOrigins(String corsAllowedOrigins) {
+        this.corsAllowedOrigins = corsAllowedOrigins;
+    }
 }
