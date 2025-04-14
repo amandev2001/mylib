@@ -1,12 +1,8 @@
 # === General ===
 HELP.md
-target/
-build/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-!**/src/main/**/build/
-!**/src/test/**/build/
+target/*
+!target/*.jar
+
 
 # === Environment / Config Files ===
 /src/main/resources/application-dev.properties
