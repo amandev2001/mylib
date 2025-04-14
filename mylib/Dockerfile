@@ -8,6 +8,7 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 COPY .mvn .mvn
+COPY mvnw ./
 
 # Give execute permissions to mvnw
 RUN chmod +x mvnw
