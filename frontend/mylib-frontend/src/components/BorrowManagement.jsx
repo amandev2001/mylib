@@ -56,14 +56,14 @@ const BorrowManagement = () => {
     // Debug: Log user roles and token
     const userRoles = authService.getUserRoles();
     const token = authService.getCurrentToken();
-    console.log('Current user roles:', userRoles);
-    console.log('Current token:', token);
-    console.log('Has admin role:', authService.hasRole(ROLES.ADMIN));
-    console.log('Has librarian role:', authService.hasRole(ROLES.LIBRARIAN));
+    // console.log('Current user roles:', userRoles);
+    // console.log('Current token:', token);
+    // console.log('Has admin role:', authService.hasRole(ROLES.ADMIN));
+    // console.log('Has librarian role:', authService.hasRole(ROLES.LIBRARIAN));
 
     // Check if user has required role
     if (!userRoles.some(role => [ROLES.ADMIN, ROLES.LIBRARIAN].includes(role))) {
-      console.log('User does not have required role, redirecting to home');
+      // console.log('User does not have required role, redirecting to home');
       navigate('/');
       return;
     }
@@ -73,7 +73,7 @@ const BorrowManagement = () => {
   const fetchBorrows = async () => {
     try {
       const token = authService.getCurrentToken();
-      console.log('Making request with token:', token);
+      // console.log('Making request with token:', token);
       
       const response = await api.get('/borrow/admin/all');
       // Sort borrows by id in descending order (newest first)

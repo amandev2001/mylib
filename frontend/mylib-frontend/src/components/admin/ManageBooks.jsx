@@ -49,7 +49,7 @@ export default function ManageBooks() {
 
       // Filter active loans (not returned)
       const activeLoans = allLoans.filter(loan => !loan.returnDate && loan.status !== "PENDING");
-      console.log( "Loans" +activeLoans)
+      // console.log( "Loans" +activeLoans)
       const categories = new Set(books.map(book => book.category));
 
       setStats({

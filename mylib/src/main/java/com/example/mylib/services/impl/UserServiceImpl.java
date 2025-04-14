@@ -7,7 +7,12 @@ import com.example.mylib.payload.AppConstants;
 import com.example.mylib.repository.UserRepo;
 import com.example.mylib.services.User.MyUserDetailsService;
 import com.example.mylib.services.User.UserService;
+import com.example.mylib.services.mail.EmailHelper;
+import com.example.mylib.services.mail.MailService;
 import com.example.mylib.services.users.UserImage;
+
+import lombok.RequiredArgsConstructor;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,6 +47,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserImage userImage;
+
+    @Autowired
+    private MailService mailService;
 
     private final BCryptPasswordEncoder encoder;
 
@@ -69,7 +78,12 @@ public class UserServiceImpl implements UserService {
         if (user.getPassword() != null && !user.getPassword().startsWith("$2a$")) {
             user.setPassword(encoder.encode(user.getPassword()));
         }
-        
+
+        String emailToken = UUID.randomUUID().toString();
+        String subject = "Verification Email";
+        user.setEmailToken(emailToken);
+        String verifyLink = EmailHelper.getLinkForAuthentication(emailToken);
+        mailService.sendVerificationEmail(user.getEmail(),subject,verifyLink);
         if(user.getRoleList() == null)
             user.setRoleList(List.of(AppConstants.ROLE_STUDENT));
         return userRepo.save(user);

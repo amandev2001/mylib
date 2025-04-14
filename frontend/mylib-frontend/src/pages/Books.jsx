@@ -364,7 +364,7 @@ function Books() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5">
         {books.map((book) => {
-          const activeBorrow = activeBorrows.find(borrow => borrow.book.id === book.id);
+          const activeBorrow = activeBorrows.find(borrow => borrow.bookId === book.id);
           
           return (
             <div 

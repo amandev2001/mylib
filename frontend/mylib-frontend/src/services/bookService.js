@@ -1,4 +1,5 @@
 import api from './api';
+import { authService } from './authService';
 
 const BOOKS_URL = '/book';
 
@@ -14,17 +15,14 @@ export const bookService = {
   },
 
   createBook: async (bookData) => {
-    // Get the current authentication token
-    const token = localStorage.getItem('token');
-    
-    // Create a new axios instance without default Content-Type header
+    const token = authService.getCurrentToken();
+
     const multipartApi = api.create({
       headers: {
         'Accept': 'application/json'
       }
     });
 
-    // Add the authentication token to the request
     if (token) {
       multipartApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
@@ -39,17 +37,14 @@ export const bookService = {
   },
 
   updateBook: async (id, bookData) => {
-    // Get the current authentication token
-    const token = localStorage.getItem('token');
-    
-    // Create a new axios instance without default Content-Type header
+    const token = authService.getCurrentToken();
+
     const multipartApi = api.create({
       headers: {
         'Accept': 'application/json'
       }
     });
-    
-    // Add the authentication token to the request
+
     if (token) {
       multipartApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }

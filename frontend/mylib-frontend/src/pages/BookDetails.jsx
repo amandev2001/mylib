@@ -45,6 +45,7 @@ function BookDetails() {
   const [reserveError, setReserveError] = useState(null);
   const [reserveSuccess, setReserveSuccess] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     fetchBookDetails();
@@ -70,44 +71,71 @@ function BookDetails() {
   const checkUserRole = async () => {
     try {
       const currentUser = await authService.getCurrentUser();
-      if (currentUser) {
-        setUserRole(currentUser.role);
+      if (currentUser && currentUser.roles) {
+        // Check if roles is an array and handle appropriately
+        if (Array.isArray(currentUser.roles)) {
+          const hasAdminRole = currentUser.roles.includes('ROLE_ADMIN');
+          setIsAdmin(hasAdminRole);
+          setUserRole(hasAdminRole ? 'ADMIN' : 'USER');
+        } else {
+          // If it's not an array (e.g., a string), handle that case
+          const hasAdminRole = currentUser.roles === 'ROLE_ADMIN';
+          setIsAdmin(hasAdminRole);
+          setUserRole(hasAdminRole ? 'ADMIN' : 'USER');
+        }
       }
     } catch (err) {
       console.error('Error checking user role:', err);
     }
   };
-
+  
   const fetchBorrowHistory = async () => {
     try {
       setHistoryLoading(true);
+      // console.log("Fetching current user...");
       const currentUser = await authService.getCurrentUser();
+      console.log("Current user:", currentUser);
+  
       let history;
-      
-      if (currentUser?.role === 'ADMIN') {
-        // Admin sees all history for the book
-        history = await loanService.getBookBorrowHistory(id);
+  
+      if (currentUser && currentUser.roles) {
+        // console.log("Checking roles...");
+        const hasAdminRole = Array.isArray(currentUser.roles)
+          ? currentUser.roles.includes('ROLE_ADMIN')
+          : currentUser.roles === 'ROLE_ADMIN';
+  
+        // console.log("Has admin role:", hasAdminRole);
+  
+        if (hasAdminRole) {
+          // console.log("Fetching admin history...");
+          history = await loanService.getBookBorrowHistory(id);
+          // console.log("Admin history:", history);
+  
+        } else {
+          // console.log("Fetching user loan history...");
+          history = await loanService.getUserLoans(currentUser.id);
+          history = history.filter(record => record.bookId === parseInt(id));
+        }
+  
+        setBorrowHistory(history);
       } else {
-        // Students see their own history for all books
-        history = await loanService.getUserLoans(currentUser.id);
-        // Filter to show only history for this specific book
-        history = history.filter(record => record.book.id === parseInt(id));
+        console.warn("User or roles are missing.");
       }
-      
-      setBorrowHistory(history);
+  
     } catch (err) {
-      console.error('Error fetching borrow history:', err);
+      console.error('❌ Error fetching borrow history:', err);
     } finally {
       setHistoryLoading(false);
     }
   };
+  
 
   const checkActiveBorrow = async () => {
     try {
       const currentUser = await authService.getCurrentUser();
       if (currentUser && currentUser.id) {
         const activeBorrows = await loanService.getActiveBorrows(currentUser.id);
-        const active = activeBorrows.find(borrow => borrow.book.id === parseInt(id));
+        const active = activeBorrows.find(borrow => borrow.bookId === parseInt(id));
         setActiveBorrow(active);
       }
     } catch (err) {
@@ -456,7 +484,7 @@ function BookDetails() {
               {/* Borrow History Section */}
               <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
                 <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {userRole === 'ADMIN' ? 'All Borrow History' : 'My Borrow History'}
+                  {isAdmin ? 'All Borrow History' : 'My Borrow History'}
                 </h2>
                 
                 {historyLoading ? (
@@ -465,15 +493,15 @@ function BookDetails() {
                   </div>
                 ) : borrowHistory.length === 0 ? (
                   <p className={`text-center py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {userRole === 'ADMIN' ? 'No borrow history found for this book' : 'You have not borrowed this book yet'}
+                    {isAdmin ? 'No borrow history found for this book' : 'You have not borrowed this book yet'}
                   </p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className={`min-w-full divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
                       <thead className={`${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
                         <tr>
-                          {userRole === 'ADMIN' && (
-                            <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>User</th>
+                          {isAdmin && (
+                            <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>User Id</th>
                           )}
                           <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>Status</th>
                           <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>Borrow Date</th>
@@ -483,9 +511,9 @@ function BookDetails() {
                       <tbody className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
                         {borrowHistory.map((record) => (
                           <tr key={record.id}>
-                            {userRole === 'ADMIN' && (
+                            {isAdmin && (
                               <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                                {record.userName}
+                                {record.userId}
                               </td>
                             )}
                             <td className="px-6 py-4 whitespace-nowrap">

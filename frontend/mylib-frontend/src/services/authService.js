@@ -1,205 +1,140 @@
-import api from './api';
+import api from "./api";
+import Cookies from "js-cookie";
 
-const TOKEN_KEY = 'token';
-const USER_ROLES_KEY = 'user_roles';
-const USER_DATA_KEY = 'user_data';
+const TOKEN_KEY = "token";
+const USER_ROLES_KEY = "user_roles";
+const USER_DATA_KEY = "user_data";
 
-// Cache the roles to avoid frequent localStorage access
+// Detect if running on localhost
+const isLocalhost = window.location.hostname === "localhost";
+
+// Cookie options
+const cookieOptions = {
+  expires: 7,
+  secure: !isLocalhost, // secure: false on localhost, true otherwise
+  sameSite: isLocalhost ? "Lax" : "None", // SameSite None for cross-site cookies
+};
+
 let cachedRoles = null;
 
 export const authService = {
-
   login: async (credentials) => {
     try {
-      console.group('LOGIN');
-      console.log('Attempting login with credentials:', credentials);
-
-      if (!credentials.email || !credentials.password) {
-        throw new Error('Email and password are required');
-      }
-
-      const response = await api.post('/api/users/login', credentials);
-
-      console.log('Login response:', response);
+      console.group("LOGIN");
+      const response = await api.post("/api/users/login", credentials);
+      console.log(response.data);
 
       if (response.data) {
         const { token, roles, email, name, userId } = response.data;
 
-        console.log('Login response data:', { token, roles, email, name, userId });
-        console.log('Type of roles:', typeof roles, 'Value:', roles);
+        // Save in cookies
+        Cookies.set(TOKEN_KEY, token, cookieOptions);
+        Cookies.set(USER_ROLES_KEY, JSON.stringify(roles), cookieOptions);
 
-        if (!token || !email || !name || !roles || !userId) {
-          throw new Error('Invalid login response data');
-        }
-
-        localStorage.setItem(TOKEN_KEY, token);
-        localStorage.setItem(USER_ROLES_KEY, JSON.stringify(roles));
-
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        console.log('Authorization header set:', `Bearer ${token}`);
-
-        // Update the roles cache
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         cachedRoles = roles;
 
         const user = { id: userId, email, name, roles };
-        localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
-        console.log('User data stored:', user);
+        Cookies.set(USER_DATA_KEY, JSON.stringify(user), cookieOptions);
 
         console.groupEnd();
         return response.data;
       }
 
-      throw new Error('No data received from login');
+      throw new Error("No data received from login");
     } catch (error) {
-      console.error('Login error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-
-      authService.logout();
-      if (error.response?.status === 403) {
-        throw new Error(error.response?.data?.message || 'Access denied');
-      }
-      if (error.response?.status === 401) {
-        throw new Error(error.response?.data || 'Invalid credentials');
-      }
-      throw new Error('Failed to login. Please try again.');
-    }
-  },
-
-  refreshAuthToken: async () => {
-    try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) throw new Error('No token available for refresh');
-
-      const response = await api.post('/api/users/refresh-token', null, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.data?.token) {
-        const newToken = response.data.token;
-        localStorage.setItem(TOKEN_KEY, newToken);
-        api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-        console.log('Token successfully refreshed:', newToken);
-        return newToken;
-      }
-
-      throw new Error('Invalid refresh token response');
-    } catch (error) {
-      console.error('Token refresh failed:', error);
       authService.logout();
       throw error;
     }
   },
 
-  register: async (userData) => {
-    const response = await api.post('/api/users/register', userData);
-    return response.data;
+  refreshAuthToken: async () => {
+    try {
+      const token = Cookies.get(TOKEN_KEY);
+      if (!token) throw new Error("No token available for refresh");
+
+      const response = await api.post("/api/users/refresh-token", null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data?.token) {
+        Cookies.set(TOKEN_KEY, response.data.token, cookieOptions);
+        api.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
+        return response.data.token;
+      }
+
+      throw new Error("Invalid refresh token response");
+    } catch (error) {
+      authService.logout();
+      throw error;
+    }
   },
 
   logout: () => {
-    console.group('LOGOUT');
-    console.log('Clearing all auth data from localStorage');
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_ROLES_KEY);
-    localStorage.removeItem(USER_DATA_KEY);
-    delete api.defaults.headers.common['Authorization'];
-    // Clear the cache when logging out
+    Cookies.remove(TOKEN_KEY);
+    Cookies.remove(USER_ROLES_KEY);
+    Cookies.remove(USER_DATA_KEY);
+    delete api.defaults.headers.common["Authorization"];
     cachedRoles = null;
-    console.groupEnd();
   },
 
   getCurrentToken: () => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    console.log('Current token from storage:', token);
-    return token;
+    return Cookies.get(TOKEN_KEY);
   },
 
   getUserRoles: () => {
-    // Return cached roles if available
-    if (cachedRoles) {
-      return cachedRoles;
-    }
-
-    const roles = localStorage.getItem(USER_ROLES_KEY);
-    console.log('Raw roles from storage:', roles);
+    if (cachedRoles) return cachedRoles;
+    const roles = Cookies.get(USER_ROLES_KEY);
     try {
       const parsed = JSON.parse(roles);
       cachedRoles = Array.isArray(parsed) ? parsed : [];
-      console.log('Parsed roles:', parsed, 'Type:', typeof parsed, 'Is Array:', Array.isArray(parsed));
       return cachedRoles;
-    } catch (e) {
-      console.error('Error parsing roles:', e);
+    } catch {
       return [];
     }
   },
 
   hasRole: (role) => {
-    const roles = authService.getUserRoles();
-    console.log(`Checking if user has role "${role}":`, roles);
-    return roles.includes(role);
+    return authService.getUserRoles().includes(role);
   },
 
   isAuthenticated: () => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    console.log('Token present for authentication check:', !!token);
-    return !!token;
+    return !!Cookies.get(TOKEN_KEY);
   },
 
   initializeAuth: () => {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token = Cookies.get(TOKEN_KEY);
     if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      console.log('Auth initialized with token:', token);
-    } else {
-      console.warn('No token found during initialization');
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
   },
 
   getCurrentUser: async () => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) {
-      console.log('No token found in storage');
-      return null;
-    }
+    const token = Cookies.get(TOKEN_KEY);
+    if (!token) return null;
 
     try {
-      const userData = localStorage.getItem(USER_DATA_KEY);
-      console.log('Raw user data from storage:', userData);
-
+      const userData = Cookies.get(USER_DATA_KEY);
       if (userData) {
         const user = JSON.parse(userData);
-        console.log('Parsed user data:', user);
-
         if (!user.id || !user.email || !user.name || !user.roles) {
-          console.error('Invalid user data in storage:', user);
           authService.logout();
           return null;
         }
-
         return user;
       }
-
-      console.log('No user data found in storage');
       return null;
-    } catch (error) {
-      console.error('Error getting user data:', error);
+    } catch {
       authService.logout();
       return null;
     }
   },
 
   resetPassword: async (email, newPassword) => {
-    try{
-      const response = await api.post('/api/users/admin/reset-password',{
-        email,
-        newPassword
-      });
-      return response.data;
-    } catch(error) {
-      throw new Error(error.response?.data?.message || 'Failed to reset password');
-    }
-  }
+    const response = await api.post("/api/users/admin/reset-password", {
+      email,
+      newPassword,
+    });
+    return response.data;
+  },
 };

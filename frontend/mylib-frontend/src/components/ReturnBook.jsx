@@ -28,9 +28,9 @@ function ReturnBook() {
         setError('User data not found');
         return;
       }
-      console.log('Fetching borrows for user:', user);
+      // console.log('Fetching borrows for user:', user);
       const response = await loanService.getUserLoans(user.id);
-      console.log('Raw borrow response:', JSON.stringify(response, null, 2));
+      // console.log('Raw borrow response:', JSON.stringify(response, null, 2));
       
       // Only show books that are actually borrowed or pending return
       const activeLoans = response.filter(loan => 
@@ -47,7 +47,7 @@ function ReturnBook() {
         fineAmount: borrow.fineAmount
       }));
       
-      console.log('Formatted borrows:', JSON.stringify(formattedBorrows, null, 2));
+      // console.log('Formatted borrows:', JSON.stringify(formattedBorrows, null, 2));
       setBorrowedBooks(formattedBorrows);
     } catch (err) {
       console.error('Error fetching borrows:', err);

@@ -1,4 +1,5 @@
 import api from './api';
+import Cookies from 'js-cookie'; 
 
 const USERS_URL = '/api/users/';
 
@@ -16,15 +17,15 @@ export const userService = {
 
   updateUser: async (id, userData) => {
     const response = await api.put(`/api/users/${id}`, userData);
-    
-    // Check if the response contains a new token
+
     const newToken = response.headers["authorization"];
     if (newToken) {
-        localStorage.setItem("token", newToken.split(" ")[1]); // Update token
+      const token = newToken.split(" ")[1];
+      Cookies.set("token", token, { expires: 7 }); // Set token with 7-day expiry
     }
 
     return response.data;
-},
+  },
 
   deleteUser: async (id) => {
     const response = await api.delete(`/api/users/${id}`);
@@ -43,9 +44,7 @@ export const userService = {
 
   uploadProfileImage: async (userId, formData) => {
     const response = await api.post(`/api/users/${userId}/profile-image`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
   }

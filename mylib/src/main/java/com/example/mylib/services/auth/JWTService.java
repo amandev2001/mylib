@@ -8,6 +8,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -30,9 +33,17 @@ public class JWTService {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+
+    @PostConstruct
+    public void checkSecret() {
+        logger.info("Loaded Jwt secret {}", jwtSecret);
+    }
+
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        return Jwts
+        String token = Jwts
                 .builder()
                 .claims().add(claims)
                 .subject(username)
@@ -40,7 +51,12 @@ public class JWTService {
                 .expiration(new Date(System.currentTimeMillis() + Duration.ofDays(1).toMillis()))
                 .and().signWith(getKey())
                 .compact();
+
+        logger.info("Generated JWT Token for {}: {}", username, token);
+
+        return token;
     }
+
 
     private SecretKey getKey() {
         byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);

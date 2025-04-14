@@ -60,6 +60,7 @@ public class BorrowServiceImpl implements BorrowService {
         }
 
         BorrowRecord borrowRecord = new BorrowRecord();
+        // BorrowRecordDTO borrowRecordDTO = new
         borrowRecord.setUser(user);
         borrowRecord.setBook(book);
         borrowRecord.setStatus(BorrowStatus.PENDING); // Now pending approval
@@ -116,13 +117,13 @@ public class BorrowServiceImpl implements BorrowService {
         return borrowRepo.save(borrowRecord);
     }
 
-//    private double calculateFine(LocalDate dueDate, LocalDate returnDate) {
-//        if (dueDate.isBefore(returnDate)) {
-//            long overdueDays = ChronoUnit.DAYS.between(dueDate, returnDate);
-//            return overdueDays * AppConstants.FINE_PER_DAY;
-//        }
-//        return 0.0;
-//    }
+    // private double calculateFine(LocalDate dueDate, LocalDate returnDate) {
+    // if (dueDate.isBefore(returnDate)) {
+    // long overdueDays = ChronoUnit.DAYS.between(dueDate, returnDate);
+    // return overdueDays * AppConstants.FINE_PER_DAY;
+    // }
+    // return 0.0;
+    // }
 
     @Override
     public void requestReturn(Long borrowRecordId) {
@@ -169,15 +170,31 @@ public class BorrowServiceImpl implements BorrowService {
     @Override
     public List<BorrowRecordDTO> getBorrowHistory(Long userId) {
         List<BorrowRecord> records = borrowRepo.findByUserId(userId);
-        return records.stream().map(this::convertToDTO).toList();
+        return records.stream().map(borrowRecord -> {
+            BorrowRecordDTO dto = modelMapper.map(borrowRecord, BorrowRecordDTO.class);
+            dto.setUserName(borrowRecord.getUser().getName());
+            dto.setBookId(borrowRecord.getBook().getId());
+            dto.setBookTitle(borrowRecord.getBook().getTitle());
+            dto.setReturnDate(borrowRecord.getReturnDate());
+            dto.setFineAmount(borrowRecord.getFineAmount());
+            return dto;
+        }).toList();
     }
 
     @Override
     public List<BorrowRecordDTO> getActiveBorrows(Long userId) {
         List<BorrowRecord> records = borrowRepo.findByUserIdAndStatus(userId, BorrowStatus.BORROWED);
-        return records.stream().map(this::convertToDTO).toList();
-    }
 
+        return records.stream().map(borrowRecord -> {
+            BorrowRecordDTO dto = modelMapper.map(borrowRecord, BorrowRecordDTO.class);
+            dto.setUserName(borrowRecord.getUser().getName());
+            dto.setBookId(borrowRecord.getBook().getId());
+            dto.setBookTitle(borrowRecord.getBook().getTitle());
+            dto.setReturnDate(borrowRecord.getReturnDate());
+            dto.setFineAmount(borrowRecord.getFineAmount());
+            return dto;
+        }).toList();
+    }
 
     @Override
     public List<BorrowRecordDTO> getAllBorrows() {
@@ -251,7 +268,7 @@ public class BorrowServiceImpl implements BorrowService {
             updated = true;
         }
 
-        if(!Objects.equals(updateData.getFineAmount(),borrowRecord.getFineAmount())){
+        if (!Objects.equals(updateData.getFineAmount(), borrowRecord.getFineAmount())) {
             borrowRecord.setFineAmount((updateData.getFineAmount()));
         }
 
@@ -266,7 +283,6 @@ public class BorrowServiceImpl implements BorrowService {
             return borrowRepo.save(borrowRecord);
         }
 
-
         if (updated) {
             System.out.println("Fields changed, saving...");
             return borrowRepo.save(borrowRecord);
@@ -275,7 +291,6 @@ public class BorrowServiceImpl implements BorrowService {
             return borrowRecord; // no save = no update SQL query
         }
     }
-
 
     public BorrowRecordDTO convertToDTO(BorrowRecord record) {
         BorrowRecordDTO dto = new BorrowRecordDTO();

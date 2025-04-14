@@ -121,6 +121,7 @@ public class UserController {
                 logger.info("Authentication successful for user: {}", userLoginDTO.getEmail());
 
                 String token = jwtService.generateToken(userLoginDTO.getEmail());
+                logger.info("JWT Token {}", token);
                 LoginResponseDTO response = new LoginResponseDTO(
                         token,
                         user.getEmail(),

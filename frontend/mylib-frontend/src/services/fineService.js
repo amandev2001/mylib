@@ -8,7 +8,6 @@ export const fineService = {
   getAllFines: async () => {
     try {
       const response = await api.get(`${FINE_URL}/admin/all`);
-      console.log('Fines data:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching fines:', error);
@@ -19,7 +18,6 @@ export const fineService = {
   markFineAsPaid: async (borrowRecordId) => {
     try {
       const response = await api.post(`${FINE_URL}/pay/${borrowRecordId}`);
-      console.log('Mark as paid response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error marking fine as paid:', error);

@@ -132,7 +132,7 @@ export default function AddBook() {
             coverUrl = coverUrl.replace('http://', 'https://');
           }
           
-          console.log('Selected cover URL from Open Library:', coverUrl);
+          // console.log('Selected cover URL from Open Library:', coverUrl);
         }
 
         // Extract and format book data from Open Library response
@@ -358,7 +358,7 @@ export default function AddBook() {
               }));
             };
             img.onerror = () => {
-              console.log('Image failed to load:', coverUrl);
+              // console.log('Image failed to load:', coverUrl);
               setErrors(prev => ({
                 ...prev,
                 coverUrl: 'Failed to load book cover image.'
@@ -373,14 +373,14 @@ export default function AddBook() {
             }));
           }
         } else {
-          console.log('No cover image found in Open Library');
+          // console.log('No cover image found in Open Library');
           setErrors(prev => ({
             ...prev,
             coverUrl: 'No cover image found for this ISBN.'
           }));
         }
       } else {
-        console.log('No book data found in Open Library');
+        // console.log('No book data found in Open Library');
         setErrors(prev => ({
           ...prev,
           coverUrl: 'No book data found for this ISBN.'
@@ -525,7 +525,7 @@ export default function AddBook() {
 
         // Send the request
         await bookService.createBook(formData);
-        console.log(formData);
+        // console.log(formData);
         
         // Show success message
         setSubmitError('success:Book added successfully!');

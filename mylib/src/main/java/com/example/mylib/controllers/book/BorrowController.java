@@ -105,6 +105,7 @@ public class BorrowController {
                 dto.setUserName(record.getUser().getName());
                 dto.setBookId(record.getBook().getId());
                 dto.setBookTitle(record.getBook().getTitle());
+                dto.setUserId(record.getUser().getId());
                 dto.setIssueDate(record.getIssueDate());
                 dto.setDueDate(record.getDueDate());
                 dto.setStatus(record.getStatus());

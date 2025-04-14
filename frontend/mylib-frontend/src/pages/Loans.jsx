@@ -22,14 +22,14 @@ const Loans = memo(function Loans() {
   });
 
   useEffect(() => {
-    console.log("Loans component mounted");
+    // console.log("Loans component mounted");
     const initialize = async () => {
-      console.log("Starting initialization...");
+      // console.log("Starting initialization...");
       try {
         await checkUserRole();
-        console.log("Role check completed");
+        // console.log("Role check completed");
         await fetchLoans();
-        console.log("Loans fetched");
+        // console.log("Loans fetched");
       } catch (error) {
         console.error("Error during initialization:", error);
       }
@@ -39,11 +39,11 @@ const Loans = memo(function Loans() {
 
   const checkUserRole = async () => {
     try {
-      console.log("Checking user role...");
+      // console.log("Checking user role...");
       const roles = authService.getUserRoles();
-      console.log("User roles:", roles);
+      // console.log("User roles:", roles);
       const hasAdminRole = roles.includes("ROLE_ADMIN");
-      console.log("Has admin role:", hasAdminRole);
+      // console.log("Has admin role:", hasAdminRole);
       setIsAdmin(hasAdminRole);
       return hasAdminRole;
     } catch (error) {
@@ -57,7 +57,7 @@ const Loans = memo(function Loans() {
     try {
       setLoading(true);
       const data = await loanService.getAllLoans();
-      console.log("Raw loan data:", JSON.stringify(data, null, 2));
+      // console.log("Raw loan data:", JSON.stringify(data, null, 2));
       setLoans(data);
       setError(null);
     } catch (err) {

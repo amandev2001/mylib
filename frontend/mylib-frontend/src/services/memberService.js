@@ -1,5 +1,6 @@
 import api from './api';
 import axios from 'axios';
+import Cookies from 'js-cookie'; //  Import Cookies
 
 const USERS_URL = '/api/users/all';
 
@@ -55,18 +56,14 @@ export const memberService = {
   uploadProfileImage: async (userId, formData) => {
     try {
       const response = await api.post(`/api/users/${userId}/profile-image`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      // Handle token update
       if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        Cookies.set('token', response.data.token, { expires: 7 });
+        setAuthToken(response.data.token);
       }
 
-      // Return the response data (contains user object and token)
       return response.data;
     } catch (error) {
       console.error('Error uploading profile image:', error);

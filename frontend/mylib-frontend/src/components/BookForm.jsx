@@ -177,13 +177,13 @@ export default function BookForm({
 
   const determineLanguage = (openLibraryData) => {
     // Implementation to be added if needed
-    console.log('Determining language from:', openLibraryData);
+    // console.log('Determining language from:', openLibraryData);
     return '';
   };
 
   const determineCategory = (openLibraryData) => {
     // Implementation to be added if needed
-    console.log('Determining category from:', openLibraryData);
+    // console.log('Determining category from:', openLibraryData);
     return '';
   };
 

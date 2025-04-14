@@ -77,13 +77,13 @@ const MyBorrows = () => {
         setError('User data not found');
         return;
       }
-      console.log('Fetching borrows for user:', user);
+      // console.log('Fetching borrows for user:', user);
       const response = await loanService.getUserLoans(user.id);
-      console.log('Raw borrow response:', JSON.stringify(response, null, 2));
+      // console.log('Raw borrow response:', JSON.stringify(response, null, 2));
       
       // Transform the response data if needed
       const formattedBorrows = response.map(borrow => {
-        console.log('Processing borrow record:', JSON.stringify(borrow, null, 2));
+        // console.log('Processing borrow record:', JSON.stringify(borrow, null, 2));
         return {
           id: borrow.id,
           bookTitle: borrow.book?.title || borrow.bookTitle || 'Unknown Book',
@@ -95,7 +95,7 @@ const MyBorrows = () => {
         };
       });
       
-      console.log('Formatted borrows:', JSON.stringify(formattedBorrows, null, 2));
+      // console.log('Formatted borrows:', JSON.stringify(formattedBorrows, null, 2));
       setBorrows(formattedBorrows);
       calculateStats(formattedBorrows);
       setError(null);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
 import { memberService } from '../services/memberService';
 import { ROLES } from '../utils/roleUtils';
+import Cookies from 'js-cookie';
 
 const DEFAULT_PROFILE = '/book-covers/fiction-default.jpg.webp';
 
@@ -82,7 +83,7 @@ const MemberEditForm = ({
         
         // Update token if received
         if (response.token) {
-          localStorage.setItem('token', response.token);
+          Cookies.set('token', response.token, { expires: 7 }); // Store token in cookies
           memberService.setAuthToken(response.token);
         }
       }
@@ -248,115 +249,30 @@ const MemberEditForm = ({
                     }`}
                   />
                 </div>
-                <span className={`ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {formData.enabled ? 'Active' : 'Inactive'}
-                </span>
-                <span className={`px-3 py-1 ml-3 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  formData.enabled 
-                    ? isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
-                    : isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'
-                }`}>
-                  {formData.enabled ? 'Active' : 'Inactive'}
+                <span className={`ml-2 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {formData.enabled ? 'Enabled' : 'Disabled'}
                 </span>
               </div>
-              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {formData.enabled 
-                  ? 'User can login and access the system.' 
-                  : 'User cannot login or access the system.'}
-              </p>
             </div>
           )}
         </div>
       </div>
-      
-      {/* About */}
-      <div className="col-span-1 md:col-span-2 mb-4">
-        <label htmlFor="about" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-          About / Notes
-        </label>
-        <textarea
-          id="about"
-          name="about"
-          rows="3"
-          value={formData.about}
-          onChange={handleChange}
-          className={`mt-1 block w-full px-4 py-3 rounded-md ${
-            isDarkMode 
-              ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-              : 'border-gray-300 focus:border-blue-500'
-          } shadow-sm focus:ring-blue-500 sm:text-sm`}
-        />
-      </div>
-      
-      {/* User Roles */}
-      {!isProfile && userRoles.includes('ROLE_ADMIN') && (
-        <div className="col-span-1 md:col-span-2 mb-4">
-          <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-            User Roles
-          </label>
-          <div className="flex flex-wrap gap-2 p-2">
-            {availableRoles.map(role => {
-              const isActive = formData.roleList.includes(role);
-              const roleLabel = role.replace('ROLE_', '');
-              
-              let bgColor, textColor;
-              if (role === 'ROLE_ADMIN') {
-                bgColor = isActive 
-                  ? isDarkMode ? 'bg-indigo-800' : 'bg-indigo-600' 
-                  : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
-                textColor = isActive 
-                  ? 'text-white' 
-                  : isDarkMode ? 'text-gray-300' : 'text-gray-700';
-              } else if (role === 'ROLE_LIBRARIAN') {
-                bgColor = isActive 
-                  ? isDarkMode ? 'bg-blue-800' : 'bg-blue-600' 
-                  : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
-                textColor = isActive 
-                  ? 'text-white' 
-                  : isDarkMode ? 'text-gray-300' : 'text-gray-700';
-              } else {
-                bgColor = isActive 
-                  ? isDarkMode ? 'bg-green-800' : 'bg-green-600' 
-                  : isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
-                textColor = isActive 
-                  ? 'text-white' 
-                  : isDarkMode ? 'text-gray-300' : 'text-gray-700';
-              }
-              
-              return (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => handleRoleToggle(role)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${bgColor} ${textColor} transition-colors duration-150`}
-                >
-                  {roleLabel}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-      
-      {/* Action Buttons */}
-      <div className="flex justify-end space-x-4 pt-4 mt-6 border-t border-gray-200 dark:border-gray-700">
-        <button
-          type="button"
-          onClick={onCancel}
-          className={`px-5 py-2.5 rounded-md text-sm font-medium ${
-            isDarkMode 
-              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          } transition-colors duration-150`}
-        >
-          Cancel
-        </button>
+
+      {/* Save and Cancel buttons */}
+      <div className="flex items-center justify-between">
         <button
           type="submit"
           disabled={loading}
-          className={`px-5 py-2.5 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors duration-150`}
+          className={`w-full md:w-auto mt-4 md:mt-0 py-3 px-6 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {loading ? 'Saving...' : 'Save Changes'}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full md:w-auto mt-4 md:mt-0 py-3 px-6 text-sm font-medium rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200 ease-in-out"
+        >
+          Cancel
         </button>
       </div>
     </form>

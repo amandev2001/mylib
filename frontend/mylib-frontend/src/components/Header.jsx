@@ -69,7 +69,7 @@ function Header() {
   }, [isProfileMenuOpen]);
 
   const isAdmin = currentUser?.roleList?.some(role => role === 'ROLE_ADMIN');
-  console.log(currentUser?.profilePic + "this is admin");
+  // console.log(currentUser?.profilePic + "this is admin");
   
 
   return (

@@ -58,8 +58,7 @@ function Home() {
     <div className="min-h-screen">
       <PublicNavbar isDarkMode={isDarkMode} />
 
-      {/* Hero section with imported SVG illustration */}
-      {/* Hero section with SVG illustration */}
+      {/* Hero section with illustration */}
       <div
         className={`pt-16 min-h-[80vh] flex items-center ${
           isDarkMode
@@ -189,8 +188,8 @@ function Home() {
         </div>
       </div>
 
-      {/* CTA Section */}
-      {/* CTA Section with SVG */}
+
+      {/* CTA (call to action) Section with SVG */}
       <div className={`py-16 ${isDarkMode ? "bg-gray-800" : "bg-blue-50"}`}>
         <div className="container mx-auto px-6">
           <div className="flex flex-col lg:flex-row items-center">
