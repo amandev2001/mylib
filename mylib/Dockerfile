@@ -1,29 +1,23 @@
-# Use Java 21 base image
-FROM eclipse-temurin:21-jdk AS build
+# Use an official OpenJDK runtime as a parent image
+FROM openjdk:17-jdk-slim AS build
 
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy Maven wrapper and permissions
-COPY .mvn/ .mvn/
-COPY mvnw .
-COPY pom.xml .
+# Copy the local code to the container
+COPY . .
 
-# Make mvnw executable
-RUN chmod +x mvnw
-
-# Download dependencies
-RUN ./mvnw dependency:go-offline
-
-# Copy source code
-COPY src src
-
-# Package application
+# Run Maven to build the application
 RUN ./mvnw clean package -DskipTests
 
-# Runtime stage
-FROM eclipse-temurin:21-jdk
-WORKDIR /app
-COPY --from=build /app/target/mylib-0.0.1-SNAPSHOT.jar app.jar
+# Second stage: Run the application
+FROM openjdk:17-jdk-slim
 
-# Run the app
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the .jar file from the build stage
+COPY --from=build /app/target/mylib-0.0.1-SNAPSHOT.jar /app/mylib.jar
+
+# Run the .jar file
+CMD ["java", "-jar", "/app/mylib.jar"]
