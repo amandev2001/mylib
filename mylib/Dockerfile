@@ -1,23 +1,29 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:17-jdk-slim AS build
+# Stage 1: Build the application
+FROM maven:3.8.4-openjdk-17-slim AS builder
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the local code to the container
-COPY . .
+# Copy the pom.xml and mvnw files
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+
+# Grant execute permissions for mvnw
+RUN chmod +x mvnw
+
+# Copy the rest of the project
+COPY src ./src
 
 # Run Maven to build the application
 RUN ./mvnw clean package -DskipTests
 
-# Second stage: Run the application
+# Stage 2: Run the application
 FROM openjdk:17-jdk-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the .jar file from the build stage
-COPY --from=build /app/target/mylib-0.0.1-SNAPSHOT.jar /app/mylib.jar
+# Copy the jar from the builder image
+COPY --from=builder /app/target/*.jar /app/app.jar
 
-# Run the .jar file
-CMD ["java", "-jar", "/app/mylib.jar"]
+# Run the application
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
