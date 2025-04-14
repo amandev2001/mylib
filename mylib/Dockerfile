@@ -7,9 +7,13 @@ WORKDIR /app
 # Copy project files
 COPY pom.xml .
 COPY src ./src
+COPY .mvn .mvn
 
-# Build the application
-RUN mvn clean package -DskipTests
+# Give execute permissions to mvnw
+RUN chmod +x mvnw
+
+# Build the application using mvnw
+RUN ./mvnw clean package -DskipTests
 
 # Runtime stage
 FROM openjdk:11-jre-slim
@@ -20,7 +24,7 @@ WORKDIR /app
 # Create directory for file uploads
 RUN mkdir -p uploads
 
-# Copy the jar from build stage
+# Copy the jar from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
 # Environment variables from your application-dev.properties
