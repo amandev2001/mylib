@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ['maven']
-
-[phases.build]
-cmds = ['chmod +x mvnw', './mvnw clean package -DskipTests']
-
-[start]
-cmd = 'java -jar target/*.jar'
