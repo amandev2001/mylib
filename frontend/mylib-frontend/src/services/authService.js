@@ -22,7 +22,7 @@ export const authService = {
     try {
       console.group("LOGIN");
       const response = await api.post("/api/users/login", credentials);
-      console.log(response.data);
+      // console.log(response.data);
 
       if (response.data) {
         const { token, roles, email, name, userId } = response.data;
