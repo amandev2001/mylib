@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = 'http://localhost:8080';
+export const API_BASE_URL = 'http://pulib.ap-south-1.elasticbeanstalk.com/';
 
 // Other configuration constants can be added here
 export const APP_NAME = 'Readify';
