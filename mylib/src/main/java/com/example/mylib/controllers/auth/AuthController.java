@@ -42,7 +42,7 @@ public class AuthController {
 
     @RestController
     public class HealthController {
-        @GetMapping("/basic-health")
+        @GetMapping("/actuator/health")
         public String healthCheck() {
             return "Application is running";
         }
