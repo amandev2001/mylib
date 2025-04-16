@@ -55,7 +55,9 @@ public class SecurityConfig {
                             "/api/users/verify-password", 
                             "/api/users/test-password",
                             "/api/users/admin/reset-password",
-                            "/actuator/health"
+                            "/actuator/**",  // Allow actuator endpoints
+                            "/actuator/health/**",  // Explicitly allow health endpoint
+                            "/actuator/info/**"     // Explicitly allow info endpoint
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

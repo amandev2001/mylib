@@ -1,10 +1,13 @@
 [build]
 builder = "nixpacks"
+buildCommand = "chmod +x mvnw && ./mvnw clean package -DskipTests"
 
 [deploy]
+startCommand = "java $JAVA_OPTS -jar target/*.jar"
 healthcheckPath = "/actuator/health"
-healthcheckTimeout = 300
+healthcheckTimeout = 180
 restartPolicy = "on-failure"
+numReplicas = 1
 
 [variables]
-JAVA_OPTS = "-Xmx512m -Xms256m"
+JAVA_OPTS = "-XX:InitialRAMPercentage=50 -XX:MaxRAMPercentage=70"
