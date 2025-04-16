@@ -46,7 +46,9 @@ public class AuthController {
             Users registeredUser = userService.saveUser(user);
             return ResponseEntity.ok(registeredUser);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            logger.error("User registration failed", e); // log full error for debugging
+
+            return ResponseEntity.badRequest().body("Registration failed. Please try again.");
         }
     }
 
@@ -77,8 +79,8 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("token", newToken, "email", user.getEmail()));
 
             } catch (Exception e) {
-                logger.error("Token refresh failed: {}", e.getMessage(), e);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+                logger.error("User registration failed", e); 
+                return ResponseEntity.badRequest().body("Registration failed. Please try again.");
             }
         }
 

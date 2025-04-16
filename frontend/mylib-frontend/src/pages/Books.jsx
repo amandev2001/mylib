@@ -70,7 +70,7 @@ function Books() {
     try {
       setLoading(true);
       const token = authService.getCurrentToken();
-      console.log('Current token:', token);
+      // console.log('Current token:', token);
       
       const data = await bookService.getAllBooks();
       console.log('Book data structure:', data[0]); // Log first book to see structureure
