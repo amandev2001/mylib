@@ -1,7 +1,7 @@
 # === General ===
 HELP.md
 target/*
-!target/*.jar
+# !target/*.jar
 
 
 # === Environment / Config Files ===
