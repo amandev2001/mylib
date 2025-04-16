@@ -2,8 +2,9 @@
 builder = "nixpacks"
 
 [deploy]
-restartPolicyType = "on-failure"
-restartPolicyMaxRetries = 10
+healthcheckPath = "/actuator/health"
+healthcheckTimeout = 300
+restartPolicy = "on-failure"
 
 [variables]
 JAVA_OPTS = "-Xmx512m -Xms256m"
