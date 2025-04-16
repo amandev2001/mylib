@@ -40,6 +40,14 @@ public class AuthController {
     @Value("${cors.allowed.origins}")
     private String corsAllowedOrigins;
 
+    @RestController
+    public class HealthController {
+        @GetMapping("/basic-health")
+        public String healthCheck() {
+            return "Application is running";
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Users user) {
         try {
@@ -79,7 +87,7 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("token", newToken, "email", user.getEmail()));
 
             } catch (Exception e) {
-                logger.error("User registration failed", e); 
+                logger.error("User registration failed", e);
                 return ResponseEntity.badRequest().body("Registration failed. Please try again.");
             }
         }
