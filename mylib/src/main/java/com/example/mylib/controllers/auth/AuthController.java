@@ -40,14 +40,6 @@ public class AuthController {
     @Value("${cors.allowed.origins}")
     private String corsAllowedOrigins;
 
-    @RestController
-    public class HealthController {
-        @GetMapping("/actuator/health")
-        public String healthCheck() {
-            return "Application is running";
-        }
-    }
-
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Users user) {
         try {
