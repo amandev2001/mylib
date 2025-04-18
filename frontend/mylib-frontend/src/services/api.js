@@ -28,25 +28,23 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-//  Request Interceptor
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    const skipUrls = ['/register', '/api/users/register', '/api/users/login', '/refresh-token'];
-    if (skipUrls.includes(config.url)) {
-      return config;
+    // Only skip token addition for these endpoints
+    const skipTokenUrls = ['/api/users/login', '/refresh-token'];
+    if (!skipTokenUrls.includes(config.url)) {
+      const token = authService.getCurrentToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-
-    const token = authService.getCurrentToken(); // 🟢 Centralized token
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-//  Response Interceptor (Handles 401 + Token Refresh)
+// Response Interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -74,13 +72,9 @@ api.interceptors.response.use(
       try {
         const response = await authService.refreshToken();
         const newToken = response.data.token;
-
-        //  Update token via authService
         authService.saveToken(newToken);
-
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-
         processQueue(null, newToken);
         return api(originalRequest);
       } catch (refreshError) {
@@ -92,39 +86,22 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
-
     return Promise.reject(error);
   }
 );
 
-//  Handle 404 Errors
-api.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response?.status === 404) {
-      console.error('Resource not found:', error.config.url);
-    }
-    return Promise.reject(error);
-  }
-);
-
-//  Add New Book (Multipart)
 export const addBook = async (formData) => {
   const multipartApi = axios.create({
     baseURL: BASE_URL,
     headers: {
       'Accept': 'application/json'
-    }
+    },
+    withCredentials: true
   });
-
-  const token = authService.getCurrentToken(); //  Use central method
+  
+  const token = authService.getCurrentToken();
   if (token) {
     multipartApi.defaults.headers.Authorization = `Bearer ${token}`;
-  }
-
-  const bookData = formData.get('bookDTO');
-  if (bookData instanceof Blob) {
-    formData.set('bookDTO', new Blob([bookData], { type: 'application/json' }));
   }
 
   const response = await multipartApi.post('/admin/book/add', formData, {

@@ -1,10 +1,8 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import api from './api';
 import { authService } from './authService';
 
 const handleAuthError = (error) => {
   if (error.response?.status === 401) {
-    // Remove token through authService if needed, or clear it directly
     authService.logout();
     window.location.href = '/login';
   }
@@ -14,15 +12,8 @@ const handleAuthError = (error) => {
 const reserveService = {
   createReserve: async (userId, bookId) => {
     try {
-      const token = authService.getCurrentToken();
-      const response = await axios.post(
-        `${API_BASE_URL}/reservation/user/${userId}/${bookId}`,
-        {},
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
+      const response = await api.post(
+        `/reservation/user/${userId}/${bookId}`
       );
       return response.data;
     } catch (error) {
@@ -48,12 +39,7 @@ const reserveService = {
 
   getReservesByUser: async (userId) => {
     try {
-      const token = authService.getCurrentToken();
-      const response = await axios.get(`${API_BASE_URL}/reservation/user/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await api.get(`/reservation/user/${userId}`);
       return response.data;
     } catch (error) {
       handleAuthError(error);
@@ -63,12 +49,7 @@ const reserveService = {
 
   getAllReservations: async () => {
     try {
-      const token = authService.getCurrentToken();
-      const response = await axios.get(`${API_BASE_URL}/reservation/all`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await api.get('/reservation/all');
       return response.data;
     } catch (error) {
       handleAuthError(error);
@@ -78,16 +59,7 @@ const reserveService = {
 
   cancelReserve: async (reserveId) => {
     try {
-      const token = authService.getCurrentToken();
-      const response = await axios.put(
-        `${API_BASE_URL}/reservation/user/${reserveId}`,
-        {},
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
+      const response = await api.put(`/reservation/user/${reserveId}`);
       return response.data;
     } catch (error) {
       handleAuthError(error);
