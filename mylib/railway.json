@@ -8,7 +8,7 @@
       "startCommand": "java -jar target/mylib-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod",
       "healthcheckPath": "/api/health",
       "healthcheckTimeout": 600,
-      "restartPolicyType": "on-failure",
+      "restartPolicyType": "on_failure",
       "numReplicas": 1,
       "healthcheckEnabled": true,
       "healthcheckInterval": 45
