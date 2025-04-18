@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 
+import java.util.Arrays;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -19,16 +21,22 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {
-        logger.info("Configuring CORS with allowed origins: {}", corsAllowedOrigins);
+        String[] allowedOriginsArray = Arrays.stream(corsAllowedOrigins.split(","))
+                                             .map(String::trim)
+                                             .toArray(String[]::new);
+
+        logger.info("Configuring CORS with allowed origins: {}", Arrays.toString(allowedOriginsArray));
+
         registry.addMapping("/**")
-                .allowedOrigins(corsAllowedOrigins.split(","))
+                .allowedOrigins(allowedOriginsArray)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders("Authorization", "Content-Type", "X-Requested-With", 
-                              "Accept", "Origin", "Access-Control-Request-Method", 
-                              "Access-Control-Request-Headers")
+                .allowedHeaders("Authorization", "Content-Type", "X-Requested-With",
+                                "Accept", "Origin", "Access-Control-Request-Method",
+                                "Access-Control-Request-Headers")
                 .exposedHeaders("Authorization")
                 .allowCredentials(true)
                 .maxAge(3600);
+
         logger.info("CORS configuration completed");
     }
 
