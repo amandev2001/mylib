@@ -18,37 +18,18 @@ import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useSidebar } from '../context/SidebarContext';
+import { useUser } from '../context/UserContext';
 import { APP_NAME } from "../config";
-import { memberService } from '../services/memberService';
 
 const DEFAULT_PROFILE = '/images/default.png';
 
 function Header() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const { isSidebarOpen, toggleSidebar } = useSidebar();
+  const { currentUser, userRoles } = useUser();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userRoles, setUserRoles] = useState([]);
-  // console.log(`roles: ${userRoles}`);
   const isAuthenticated = authService.isAuthenticated();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (isAuthenticated) {
-        const user = await memberService.getCurrentMember();
-        setCurrentUser(user);
-        if (user?.roleList) {
-          // Remove 'ROLE_' prefix and capitalize first letter
-          const formattedRoles = user.roleList.map(role => 
-            role.replace('ROLE_', '').charAt(0).toUpperCase() + 
-            role.replace('ROLE_', '').slice(1).toLowerCase()
-          );
-          setUserRoles(formattedRoles);
-        }
-      }
-    };
-    fetchUserData();
-  }, [isAuthenticated]);
+  const isAdmin = currentUser?.roleList?.some(role => role === 'ROLE_ADMIN');
 
   const handleLogout = () => {
     authService.logout();
@@ -67,10 +48,6 @@ function Header() {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [isProfileMenuOpen]);
-
-  const isAdmin = currentUser?.roleList?.some(role => role === 'ROLE_ADMIN');
-  // console.log(currentUser?.profilePic + "this is admin");
-  
 
   return (
     <header className="fixed top-0 left-0 w-full h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30">

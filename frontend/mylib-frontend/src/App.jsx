@@ -36,6 +36,7 @@ import Home from "./pages/Home";
 import { SidebarProvider } from "./context/SidebarContext";
 import { useSidebar } from "./context/SidebarContext";
 import About from "./pages/About";
+import { UserProvider } from "./context/UserContext";
 
 // Layout wrapper component for protected routes
 const ProtectedLayout = ({ children }) => {
@@ -70,225 +71,227 @@ function App() {
   return (
     <AuthProvider>
       <DarkModeProvider>
-        <SidebarProvider>
-          <Router>
-            <Routes>
-              {/* Public routes */}
-              <Route
-                path="/"
-                element={
-                  <PublicLayout>
-                    <Home />
-                  </PublicLayout>
-                }
-              />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/reset-password" element={<PasswordReset />} />
-              <Route path="/about" element={<About />} />
+        <UserProvider>
+          <SidebarProvider>
+            <Router>
+              <Routes>
+                {/* Public routes */}
+                <Route
+                  path="/"
+                  element={
+                    <PublicLayout>
+                      <Home />
+                    </PublicLayout>
+                  }
+                />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/reset-password" element={<PasswordReset />} />
+                <Route path="/about" element={<About />} />
 
 
-              {/* Protected routes with shared layout */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <ProtectedLayout>
-                      <Dashboard />
-                    </ProtectedLayout>
-                  </ProtectedRoute>
-                }
-              />
+                {/* Protected routes with shared layout */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <ProtectedLayout>
+                        <Dashboard />
+                      </ProtectedLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/books"
-                element={
-                  <ProtectedRoute>
-                    <ProtectedLayout>
-                      <Books />
-                    </ProtectedLayout>
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/books"
+                  element={
+                    <ProtectedRoute>
+                      <ProtectedLayout>
+                        <Books />
+                      </ProtectedLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/books/:id"
-                element={
-                  <ProtectedRoute>
-                    <ProtectedLayout>
-                      <BookDetails />
-                    </ProtectedLayout>
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/books/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ProtectedLayout>
+                        <BookDetails />
+                      </ProtectedLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/books/add"
-                element={
-                  <RoleProtectedRoute
-                    allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}
-                  >
-                    <ProtectedLayout>
-                      <AddBook />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/books/add"
+                  element={
+                    <RoleProtectedRoute
+                      allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}
+                    >
+                      <ProtectedLayout>
+                        <AddBook />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/members"
-                element={
-                  <ProtectedRoute>
-                    <ProtectedLayout>
-                      <Members />
-                    </ProtectedLayout>
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/members"
+                  element={
+                    <ProtectedRoute>
+                      <ProtectedLayout>
+                        <Members />
+                      </ProtectedLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <ProtectedLayout>
-                      <Profile />
-                    </ProtectedLayout>
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <ProtectedLayout>
+                        <Profile />
+                      </ProtectedLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/loans"
-                element={
-                  <ProtectedRoute>
-                    <ProtectedLayout>
-                      <Loans />
-                    </ProtectedLayout>
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/loans"
+                  element={
+                    <ProtectedRoute>
+                      <ProtectedLayout>
+                        <Loans />
+                      </ProtectedLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/borrow-management"
-                element={
-                  <RoleProtectedRoute
-                    allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}
-                  >
-                    <ProtectedLayout>
-                      <BorrowManagement />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/borrow-management"
+                  element={
+                    <RoleProtectedRoute
+                      allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}
+                    >
+                      <ProtectedLayout>
+                        <BorrowManagement />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/reservation-management"
-                element={
-                  <RoleProtectedRoute
-                    allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}
-                  >
-                    <ProtectedLayout>
-                      <ReservationManagement />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/reservation-management"
+                  element={
+                    <RoleProtectedRoute
+                      allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}
+                    >
+                      <ProtectedLayout>
+                        <ReservationManagement />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/role-management"
-                element={
-                  <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                    <ProtectedLayout>
-                      <RoleManagement />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/role-management"
+                  element={
+                    <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <ProtectedLayout>
+                        <RoleManagement />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/my-reservations"
-                element={
-                  <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-                    <ProtectedLayout>
-                      <MyReservations />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/my-reservations"
+                  element={
+                    <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+                      <ProtectedLayout>
+                        <MyReservations />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/my-borrows"
-                element={
-                  <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-                    <ProtectedLayout>
-                      <MyBorrows />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/my-borrows"
+                  element={
+                    <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+                      <ProtectedLayout>
+                        <MyBorrows />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/manage-books"
-                element={
-                  <RoleProtectedRoute
-                    allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}
-                  >
-                    <ProtectedLayout>
-                      <ManageBooks />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/manage-books"
+                  element={
+                    <RoleProtectedRoute
+                      allowedRoles={[ROLES.ADMIN, ROLES.LIBRARIAN]}
+                    >
+                      <ProtectedLayout>
+                        <ManageBooks />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/fines"
-                element={
-                  <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                    <ProtectedLayout>
-                      <FineManagement />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/fines"
+                  element={
+                    <RoleProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <ProtectedLayout>
+                        <FineManagement />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/my-fines"
-                element={
-                  <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
-                    <ProtectedLayout>
-                      <FinesAndPayments />
-                    </ProtectedLayout>
-                  </RoleProtectedRoute>
-                }
-              />
+                <Route
+                  path="/my-fines"
+                  element={
+                    <RoleProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+                      <ProtectedLayout>
+                        <FinesAndPayments />
+                      </ProtectedLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/help"
-                element={
-                
-                    <ProtectedLayout>
-                      <Help />
-                    </ProtectedLayout>
-                 
-                }
-              />
+                <Route
+                  path="/help"
+                  element={
+                  
+                      <ProtectedLayout>
+                        <Help />
+                      </ProtectedLayout>
+                   
+                  }
+                />
 
-              <Route
-                path="/support"
-                element={
-                  <ProtectedRoute>
-                    <ProtectedLayout>
-                      <Support />
-                    </ProtectedLayout>
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/support"
+                  element={
+                    <ProtectedRoute>
+                      <ProtectedLayout>
+                        <Support />
+                      </ProtectedLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Redirect any unknown routes to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Router>
-        </SidebarProvider>
+                {/* Redirect any unknown routes to home */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Router>
+          </SidebarProvider>
+        </UserProvider>
       </DarkModeProvider>
     </AuthProvider>
   );
