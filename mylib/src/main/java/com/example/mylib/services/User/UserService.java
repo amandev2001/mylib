@@ -41,4 +41,8 @@ public interface UserService {
     Users updateUserRoles(Long userId, List<String> roles);
 
     void updateSecurityContext(Users updatedUser);
+
+    void resendEmailVerificationLink(Long userId);
+
+    boolean verifyEmailToken(Long userId, String token);
 }

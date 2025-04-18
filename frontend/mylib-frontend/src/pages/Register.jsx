@@ -5,6 +5,7 @@ import { useDarkMode } from "../context/DarkModeContext";
 import Footer from "../components/Footer";
 import PublicNavbar from "../components/PublicNavbar";
 import { APP_NAME } from "../config";
+import { memberService } from "../services/memberService";
 
 function Register() {
   const { isDarkMode } = useDarkMode();
@@ -50,10 +51,10 @@ function Register() {
   const validatePassword = (password) => {
     if (!password) return "Password is required";
     if (password.length < 8) return "Password must be at least 8 characters";
-    if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter";
+    // if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter";
     if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter";
     if (!/[0-9]/.test(password)) return "Password must contain at least one number";
-    if (!/[!@#$%^&*]/.test(password)) return "Password must contain at least one special character (!@#$%^&*)";
+    // if (!/[!@#$%^&*]/.test(password)) return "Password must contain at least one special character (!@#$%^&*)";
     return "";
   };
 
@@ -87,7 +88,6 @@ function Register() {
     setGeneralError("");
     setRegistrationSuccess(false);
     
-    // Validate all fields before submission
     if (!validateForm()) {
       return;
     }
@@ -95,8 +95,7 @@ function Register() {
     setLoading(true);
 
     try {
-      await authService.register(formData);
-      // Set registration success state instead of immediate redirect
+      const response = await memberService.createMember(formData);
       setRegistrationSuccess(true);
       
       // Reset the form
@@ -108,13 +107,21 @@ function Register() {
         roleList: ["ROLE_STUDENT"]
       });
       
-      // After 5 seconds, redirect to login page
+      // Show success message for longer (15 seconds) to give user time to read
       setTimeout(() => {
-        navigate("/login");
-      }, 5000);
+        navigate("/login", { 
+          state: { 
+            message: "Please check your email to verify your account before logging in." 
+          }
+        });
+      }, 15000);
       
     } catch (err) {
-      setGeneralError(err.response?.data || "Failed to register. Please try again.");
+      if (err.response?.status === 409) {
+        setGeneralError("An account with this email already exists.");
+      } else {
+        setGeneralError(err.response?.data?.message || "Failed to register. Please try again.");
+      }
       console.error("Registration error:", err);
     } finally {
       setLoading(false);

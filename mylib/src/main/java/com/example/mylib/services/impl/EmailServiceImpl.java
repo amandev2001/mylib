@@ -1,11 +1,19 @@
 package com.example.mylib.services.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import com.example.mylib.services.mail.MailService;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailServiceImpl implements MailService {
@@ -13,11 +21,16 @@ public class EmailServiceImpl implements MailService {
     private final JavaMailSender eMailSender;
     private final String domainName;
     private final String APP_NAME;
+    private final SpringTemplateEngine templateEngine;
+
+    private static final Logger logger = LoggerFactory.getLogger(EmailServiceImpl.class);
 
     public EmailServiceImpl(JavaMailSender eMailSender,
-                            @Value("${spring.mail.properties.mail.smtp.from}") String domainName,
-                            @Value("${spring.application.name}") String APP_NAME) {
+                          SpringTemplateEngine templateEngine,
+                          @Value("${spring.mail.properties.mail.smtp.from}") String domainName,
+                          @Value("${spring.application.name}") String APP_NAME) {
         this.eMailSender = eMailSender;
+        this.templateEngine = templateEngine;
         this.domainName = domainName;
         this.APP_NAME = APP_NAME;
     }
@@ -33,8 +46,18 @@ public class EmailServiceImpl implements MailService {
     }
 
     @Override
-    public void sendEmailWithHtml() {
-        throw new UnsupportedOperationException("Unimplemented method 'sendEmailWithHtml'");
+    public void sendEmailWithHtml(String to, String subject, String templateName, Context context) throws MessagingException {
+        MimeMessage message = eMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setFrom(domainName);
+        
+        String htmlContent = templateEngine.process(templateName, context);
+        helper.setText(htmlContent, true);
+        
+        eMailSender.send(message);
     }
 
     @Override
@@ -44,25 +67,28 @@ public class EmailServiceImpl implements MailService {
 
     @Override
     public void sendVerificationEmail(String to, String name, String verificationLink) {
+        logger.info("Sending verification email to {} with this link {}", to, verificationLink);
         String subject = "Verify Your Email for " + APP_NAME + " Account";
 
-        String body = "Dear " + name + ",\n\n" +
-                "Thank you for registering with " + APP_NAME + "! We're excited to have you join our community.\n\n" +
-                "To complete your registration and activate your account, please verify your email address by clicking the link below:\n\n" +
-                verificationLink + "\n\n" +
-                "This link will expire in 24 hours for security reasons.\n\n" +
-                "Once verified, you'll have access to:\n" +
-                "• Browse our extensive collection of books and resources\n" +
-                "• Reserve materials online\n" +
-                "• Access digital content\n" +
-                "• Participate in library events and programs\n\n" +
-                "If you did not create an account with " + APP_NAME + ", please disregard this email.\n\n" +
-                "If you have any questions or need assistance, please contact our support team at support@" + domainName
-                + " or call us.\n\n" +
-                "Happy reading!\n\n" +
-                "Best regards,\n" +
-                "The " + APP_NAME + " Team";
+        Context context = new Context();
+        context.setVariable("name", name);
+        context.setVariable("verificationLink", verificationLink);
+        context.setVariable("appName", APP_NAME);
+        context.setVariable("domain", domainName);
 
-        sendEmail(to, subject, body);
+        try {
+            sendEmailWithHtml(to, subject, "email-verification", context);
+        } catch (MessagingException e) {
+            logger.error("Failed to send HTML email to {}: {}", to, e.getMessage());
+            try {
+                // Try plain text template as fallback
+                String plainTextContent = templateEngine.process("email-verification.txt", context);
+                sendEmail(to, subject, plainTextContent);
+            } catch (Exception fallbackError) {
+                logger.error("Failed to send plain text email to {}: {}", to, fallbackError.getMessage());
+                // If both HTML and text template fail, throw the original error
+                throw new RuntimeException("Failed to send verification email", e);
+            }
+        }
     }
 }

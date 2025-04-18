@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSendException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -81,6 +82,18 @@ public class UserController {
         }
     }
 
+    @PostMapping("resend/{userId}")
+    public ResponseEntity<?> resendVerificationEmail(@PathVariable Long userId) {
+        try {
+            logger.info("Trying to resend verification link to user.");
+            userService.resendEmailVerificationLink(userId);
+            return ResponseEntity.ok("Email send successfully.");
+        }catch (Exception e) {
+            logger.error("Resending Verification Email failed");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Resending verification email failed");
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> userLogin(@RequestBody UserLoginDTO userLoginDTO) {
         try {
@@ -104,6 +117,12 @@ public class UserController {
                         .body(Map.of(
                                 "error", "Account is disabled",
                                 "message", "Please enable your account or contact an administrator"));
+            } else if (!user.isEmailVerified()) {
+                logger.warn("Login failed: Email is not verified  {}", userLoginDTO.getEmail());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of(
+                                "error", "Email is not verified.",
+                                "message", "Please verify your email click on the verification link to verify."));
             }
 
             logger.info("User found in database. Attempting authentication...");
@@ -482,6 +501,22 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading profile image");
     }
 }
+
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyEmail(
+            @RequestParam("userId") Long userId,
+            @RequestParam("token") String token) {
+
+        boolean verified = userService.verifyEmailToken(userId, token);
+
+        if (verified) {
+            return ResponseEntity.ok("Email verified successfully!");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid or expired verification link.");
+        }
+    }
+
 
 
 }

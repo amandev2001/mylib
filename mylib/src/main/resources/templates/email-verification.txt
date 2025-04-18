@@ -1,0 +1,24 @@
+Dear [(${name})],
+
+Thank you for registering with [(${appName})]! We're excited to have you join our community.
+
+To complete your registration and activate your account, please verify your email address by clicking the link below:
+
+[(${verificationLink})]
+
+This link will expire in 24 hours for security reasons.
+
+Once verified, you'll have access to:
+• Browse our extensive collection of books and resources
+• Reserve materials online
+• Access digital content
+• Participate in library events and programs
+
+If you did not create an account with [(${appName})], please disregard this email.
+
+If you have any questions or need assistance, please contact our support team at support@[(${domain})]
+
+Happy reading!
+
+Best regards,
+The [(${appName})] Team

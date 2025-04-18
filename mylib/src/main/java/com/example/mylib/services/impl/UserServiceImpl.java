@@ -11,8 +11,6 @@ import com.example.mylib.services.mail.EmailHelper;
 import com.example.mylib.services.mail.MailService;
 import com.example.mylib.services.users.UserImage;
 
-import lombok.RequiredArgsConstructor;
-
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +19,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.attribute.UserPrincipal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +36,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private MyUserDetailsService myUserDetailsService;
+
+    @Autowired
+    private EmailHelper emailHelper;
 
     @Autowired
     private UserRepo userRepo;
@@ -79,12 +80,7 @@ public class UserServiceImpl implements UserService {
             user.setPassword(encoder.encode(user.getPassword()));
         }
 
-        String emailToken = UUID.randomUUID().toString();
-        String subject = "Verification Email";
-        user.setEmailToken(emailToken);
-        String verifyLink = EmailHelper.getLinkForAuthentication(emailToken);
-        mailService.sendVerificationEmail(user.getEmail(),subject,verifyLink);
-        if(user.getRoleList() == null)
+        if (user.getRoleList() == null)
             user.setRoleList(List.of(AppConstants.ROLE_STUDENT));
         return userRepo.save(user);
     }
@@ -96,6 +92,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Users saveUserDto(UserRegistrationDto userRegistrationDto) {
+        String emailToken = UUID.randomUUID().toString();
+        String subject = "Verification Email";
+
+
         Users user = new Users();
         user.setName(userRegistrationDto.getName());
         user.setEmail(userRegistrationDto.getEmail());
@@ -103,19 +103,23 @@ public class UserServiceImpl implements UserService {
         user.setPhoneNumber(userRegistrationDto.getPhoneNumber());
         user.setRoleList(userRegistrationDto.getRoleList());
         user.setEnabled(false);
-        
+        user.setEmailToken(emailToken);
+        String verifyLink = emailHelper.getLinkForAuthentication(emailToken,user.getId().toString());
+        mailService.sendVerificationEmail(user.getEmail(), subject, verifyLink);
+
         logger.info("Creating new user with email: {}, enabled: {}", user.getEmail(), user.isEnabled());
-        
+
         return saveUser(user);
     }
 
     @Override
-    public Optional<Users> getUserById(String id) {
+    public Optional<Users> getUserById(String userId) {
         try {
-            Long userId = Long.parseLong(id);
-            return userRepo.findById(userId);
-        } catch (NumberFormatException e) {
-            logger.error("Invalid user ID format: " + id, e);
+            Long id = Long.parseLong(userId);
+            return userRepo.findById(id);
+        } catch (
+                NumberFormatException e) {
+            logger.error("Invalid user ID format: " + userId, e);
             return Optional.empty();
         }
     }
@@ -178,13 +182,33 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateSecurityContext(Users updatedUser) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication != null && authentication.isAuthenticated()) {
-        UserDetails updatedUserDetails = myUserDetailsService.loadUserByUsername(updatedUser.getEmail());
-        UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(
-                updatedUserDetails, authentication.getCredentials(), updatedUserDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(newAuth);
-        logger.info("SecurityContext updated for user: {}", updatedUser.getEmail());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            UserDetails updatedUserDetails = myUserDetailsService.loadUserByUsername(updatedUser.getEmail());
+            UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(
+                    updatedUserDetails, authentication.getCredentials(), updatedUserDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(newAuth);
+            logger.info("SecurityContext updated for user: {}", updatedUser.getEmail());
+        }
     }
-}
+
+    @Override
+    public void resendEmailVerificationLink(Long userId) {
+        Users user = getUserById(userId.toString()).orElseThrow(() -> new UsernameNotFoundException("User not found with this userId: " + userId));
+        logger.info("Sending via userService");
+        String verifyLink = emailHelper.getLinkForAuthentication(user.getEmailToken(),user.getId().toString());
+        mailService.sendVerificationEmail(user.getEmail(), user.getName(), verifyLink);
+    }
+
+    @Override
+    public boolean verifyEmailToken(Long userId, String token) {
+        Users user = userRepo.findByIdAndEmailToken(userId,token);
+        if(user != null){
+            user.setEmailVerified(true);
+            user.setEmailToken(null);
+            userRepo.save(user);
+            return user.isEmailVerified();
+        }
+        return false;
+    }
 }

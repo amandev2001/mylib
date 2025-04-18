@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f7f7f7; color: #333333;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #1a365d 0%, #2563eb 100%); border-radius: 8px 8px 0 0;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;" th:text="${appName}">Library App</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="margin: 0 0 20px; color: #1a365d;">Hello <span th:text="${name}">User</span>,</h2>
+                            <p style="margin: 0 0 20px; line-height: 1.5;">Thank you for joining <span th:text="${appName}">our library</span>! We're excited to have you as part of our community.</p>
+                            
+                            <p style="margin: 0 0 30px; line-height: 1.5;">Please verify your email address to complete your registration and access your account:</p>
+                            
+                            <!-- Button -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a th:href="${verificationLink}" style="background-color: #2563eb; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Verify My Email</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 30px 0 10px; font-size: 13px; color: #666666;">This link will expire in 24 hours for security reasons.</p>
+                            
+                            <!-- Features Box -->
+                            <div style="background-color: #f8fafc; border-radius: 5px; padding: 20px; margin: 30px 0;">
+                                <h3 style="margin: 0 0 15px; color: #1a365d;">Once verified, you'll have access to:</h3>
+                                <ul style="margin: 0; padding: 0; list-style: none;">
+                                    <li style="margin: 10px 0; padding-left: 25px; position: relative;">
+                                        <span style="color: #2563eb; position: absolute; left: 0;">✓</span>
+                                        Browse our extensive collection of books
+                                    </li>
+                                    <li style="margin: 10px 0; padding-left: 25px; position: relative;">
+                                        <span style="color: #2563eb; position: absolute; left: 0;">✓</span>
+                                        Reserve materials online
+                                    </li>
+                                    <li style="margin: 10px 0; padding-left: 25px; position: relative;">
+                                        <span style="color: #2563eb; position: absolute; left: 0;">✓</span>
+                                        Access digital content
+                                    </li>
+                                    <li style="margin: 10px 0; padding-left: 25px; position: relative;">
+                                        <span style="color: #2563eb; position: absolute; left: 0;">✓</span>
+                                        Participate in library events
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <p style="margin: 20px 0; line-height: 1.5; color: #666666; font-size: 13px;">If you didn't create an account with <span th:text="${appName}">our library</span>, please disregard this email.</p>
+                            
+                            <p style="margin: 20px 0; line-height: 1.5;">Need help? Contact our support team at <a th:href="'mailto:support@' + ${domain}" style="color: #2563eb; text-decoration: none;" th:text="'support@' + ${domain}">support@example.com</a></p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px; text-align: center; color: #666666; font-size: 14px; border-top: 1px solid #e5e7eb;">
+                            <p style="margin: 0;">Best regards,<br/>The <span th:text="${appName}">Library</span> Team</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
