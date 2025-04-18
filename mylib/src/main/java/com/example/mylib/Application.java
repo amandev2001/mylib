@@ -2,6 +2,8 @@ package com.example.mylib;
 import com.example.mylib.entities.Users;
 import com.example.mylib.payload.AppConstants;
 import com.example.mylib.repository.UserRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -13,9 +15,10 @@ import java.util.List;
 @SpringBootApplication
 public class Application implements CommandLineRunner {
 
+    private static final Logger logger = LoggerFactory.getLogger(Application.class);
+
     @Autowired
     private UserRepo userRepo;
-
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -23,21 +26,35 @@ public class Application implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        String adminEmail = "puadmin4578@gmail.com";
-        if (userRepo.findByEmail(adminEmail) == null) {
-            Users admin = new Users();
-            admin.setEmail(adminEmail);
-            admin.setName("Admin");
+        try {
+            logger.info("Starting application initialization...");
+            String adminEmail = "puadmin4578@gmail.com";
+            
+            logger.info("Checking for admin user: {}", adminEmail);
+            Users existingAdmin = userRepo.findByEmail(adminEmail);
+            
+            if (existingAdmin == null) {
+                logger.info("Admin user not found. Creating new admin user...");
+                Users admin = new Users();
+                admin.setEmail(adminEmail);
+                admin.setName("Admin");
 
-            //  Create encoder manually or get it from SecurityConfig
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-            admin.setPassword(encoder.encode("admin5!4$3"));
+                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+                String encodedPassword = encoder.encode("admin5!4$3");
+                admin.setPassword(encodedPassword);
+                logger.debug("Password encoded successfully");
 
-            admin.setAbout("Admin for production");
-            admin.setRoleList(List.of(AppConstants.ROLE_ADMIN));
-            userRepo.save(admin);
-        } else {
-            System.out.println("Admin user already exists.");
+                admin.setAbout("Admin for production");
+                admin.setRoleList(List.of(AppConstants.ROLE_ADMIN));
+                
+                Users savedAdmin = userRepo.save(admin);
+                logger.info("Admin user created successfully with ID: {}", savedAdmin.getId());
+            } else {
+                logger.info("Admin user already exists with ID: {}", existingAdmin.getId());
+            }
+        } catch (Exception e) {
+            logger.error("Error during application initialization", e);
+            // Don't throw the exception - let the application continue to start
         }
     }
 }
