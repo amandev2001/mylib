@@ -11,7 +11,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  withCredentials: true,
+  withCredentials: true
 });
 
 let isRefreshing = false;
@@ -31,8 +31,14 @@ const processQueue = (error, token = null) => {
 // Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    // Only skip token addition for these endpoints
-    const skipTokenUrls = ['/api/users/login', '/refresh-token'];
+    // Skip token addition for public endpoints
+    const skipTokenUrls = [
+      '/api/users/login', 
+      '/refresh-token',
+      '/register',
+      '/api/users/register'
+    ];
+    
     if (!skipTokenUrls.includes(config.url)) {
       const token = authService.getCurrentToken();
       if (token) {
@@ -44,13 +50,17 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor
+// Response Interceptor with improved error handling
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (originalRequest.url === '/api/users/login' || originalRequest.url === '/refresh-token') {
+    // Don't retry for these endpoints
+    if (originalRequest.url === '/api/users/login' || 
+        originalRequest.url === '/refresh-token' ||
+        originalRequest.url === '/register' ||
+        originalRequest.url === '/api/users/register') {
       return Promise.reject(error);
     }
 
@@ -86,6 +96,20 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
+
+    // Enhanced error handling
+    if (error.response) {
+      // Server responded with error status
+      const errorMessage = error.response.data?.message || error.response.data || error.message;
+      error.displayMessage = errorMessage;
+    } else if (error.request) {
+      // Request made but no response
+      error.displayMessage = 'No response from server. Please check your connection.';
+    } else {
+      // Error in request configuration
+      error.displayMessage = 'Failed to send request. Please try again.';
+    }
+
     return Promise.reject(error);
   }
 );

@@ -56,7 +56,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/health",  // Health check endpoint
                                 "/api/users/login",
-                                "/api/users/register",
+                                "/register",  // Add this line for registration
+                                "/api/users/register",  // And this one for consistency
                                 "/api/users/verify-password",
                                 "/api/users/test-password",
                                 "/api/users/admin/reset-password",

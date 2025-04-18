@@ -95,21 +95,25 @@ public class UserServiceImpl implements UserService {
         String emailToken = UUID.randomUUID().toString();
         String subject = "Verification Email";
 
-
         Users user = new Users();
         user.setName(userRegistrationDto.getName());
         user.setEmail(userRegistrationDto.getEmail());
-        user.setPassword(userRegistrationDto.getPassword());  // This will be encoded in saveUser
+        user.setPassword(userRegistrationDto.getPassword()); // This will be encoded in saveUser
         user.setPhoneNumber(userRegistrationDto.getPhoneNumber());
         user.setRoleList(userRegistrationDto.getRoleList());
         user.setEnabled(false);
         user.setEmailToken(emailToken);
-        String verifyLink = emailHelper.getLinkForAuthentication(emailToken,user.getId().toString());
-        mailService.sendVerificationEmail(user.getEmail(), subject, verifyLink);
 
-        logger.info("Creating new user with email: {}, enabled: {}", user.getEmail(), user.isEnabled());
+        // ✅ Save the user first to get the generated ID
+        Users savedUser = saveUser(user);
 
-        return saveUser(user);
+        // ✅ Now getId() will not be null
+        String verifyLink = emailHelper.getLinkForAuthentication(emailToken, savedUser.getId().toString());
+        mailService.sendVerificationEmail(savedUser.getEmail(), subject, verifyLink);
+
+        logger.info("Creating new user with email: {}, enabled: {}", savedUser.getEmail(), savedUser.isEnabled());
+
+        return savedUser;
     }
 
     @Override
@@ -117,8 +121,7 @@ public class UserServiceImpl implements UserService {
         try {
             Long id = Long.parseLong(userId);
             return userRepo.findById(id);
-        } catch (
-                NumberFormatException e) {
+        } catch (NumberFormatException e) {
             logger.error("Invalid user ID format: " + userId, e);
             return Optional.empty();
         }
@@ -194,20 +197,29 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void resendEmailVerificationLink(Long userId) {
-        Users user = getUserById(userId.toString()).orElseThrow(() -> new UsernameNotFoundException("User not found with this userId: " + userId));
+        Users user = getUserById(userId.toString())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with this userId: " + userId));
+        if (user.getEmailToken() == null) {
+            System.out.println("Email token is null");
+            user.setEmailToken(UUID.randomUUID().toString());
+            userRepo.save(user);
+        }
         logger.info("Sending via userService");
-        String verifyLink = emailHelper.getLinkForAuthentication(user.getEmailToken(),user.getId().toString());
+        String verifyLink = emailHelper.getLinkForAuthentication(user.getEmailToken(), user.getId().toString());
         mailService.sendVerificationEmail(user.getEmail(), user.getName(), verifyLink);
     }
 
     @Override
     public boolean verifyEmailToken(Long userId, String token) {
-        Users user = userRepo.findByIdAndEmailToken(userId,token);
-        if(user != null){
+        Users user = userRepo.findByIdAndEmailToken(userId, token);
+        logger.info(String.valueOf(userId), token);
+        if (user != null) {
             user.setEmailVerified(true);
             user.setEmailToken(null);
             userRepo.save(user);
             return user.isEmailVerified();
+        } else {
+            logger.info(" This user is null");
         }
         return false;
     }

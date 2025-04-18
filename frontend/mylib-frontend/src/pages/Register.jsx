@@ -107,7 +107,6 @@ function Register() {
         roleList: ["ROLE_STUDENT"]
       });
       
-      // Show success message for longer (15 seconds) to give user time to read
       setTimeout(() => {
         navigate("/login", { 
           state: { 
@@ -117,12 +116,17 @@ function Register() {
       }, 15000);
       
     } catch (err) {
+      console.error("Registration error:", err);
       if (err.response?.status === 409) {
         setGeneralError("An account with this email already exists.");
       } else {
-        setGeneralError(err.response?.data?.message || "Failed to register. Please try again.");
+        // Try to get the error message from different possible response formats
+        const errorMessage = err.response?.data?.message || 
+                           err.response?.data || 
+                           err.message || 
+                           "Failed to register. Please try again.";
+        setGeneralError(errorMessage);
       }
-      console.error("Registration error:", err);
     } finally {
       setLoading(false);
     }

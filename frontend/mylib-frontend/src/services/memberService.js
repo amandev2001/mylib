@@ -24,8 +24,21 @@ export const memberService = {
   },
 
   createMember: async (memberData) => {
-    const response = await api.post('/register', memberData);
-    return response.data;
+    try {
+      const response = await api.post('/api/users/register', memberData);
+      return response.data;
+    } catch (error) {
+      // Convert any error into a readable format
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.data) {
+        throw new Error(error.response.data);
+      } else if (error.displayMessage) {
+        throw new Error(error.displayMessage);
+      } else {
+        throw new Error(error.message || 'Registration failed. Please try again.');
+      }
+    }
   },
 
   updateMember: async (id, memberData) => {
