@@ -60,6 +60,8 @@ public class SecurityConfig {
                                 "/api/users/register",  // And this one for consistency
                                 "/api/users/verify-password",
                                 "/api/users/test-password",
+                                "/api/users/forgot-password",
+                                "/reset-password",
                                 "/api/users/admin/reset-password",
                                 "/api/users/verify",
                                 "/api/users/resend/*",

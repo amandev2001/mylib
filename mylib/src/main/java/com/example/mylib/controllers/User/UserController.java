@@ -5,6 +5,8 @@ import com.example.mylib.services.User.MyUserDetailsService;
 import com.example.mylib.services.auth.JWTService;
 import com.example.mylib.services.impl.UserServiceImpl;
 import com.example.mylib.entities.Users;
+import com.example.mylib.services.mail.EmailHelper;
+import com.example.mylib.services.mail.MailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.attribute.UserPrincipal;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -39,6 +38,12 @@ public class UserController {
 
     @Autowired
     private UserServiceImpl userService;
+
+    @Autowired
+    private EmailHelper emailHelper;
+
+    @Autowired
+    private MailService mailService;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -98,8 +103,7 @@ public class UserController {
     public ResponseEntity<?> userLogin(@RequestBody UserLoginDTO userLoginDTO) {
         try {
             logger.info("Login attempt for email: {}", userLoginDTO.getEmail());
-            logger.debug("Password length: {}",
-                    userLoginDTO.getPassword() != null ? userLoginDTO.getPassword().length() : 0);
+            logger.debug("Password length: {}", userLoginDTO.getPassword() != null ? userLoginDTO.getPassword().length() : 0);
 
             // Check if user exists first
             Users user = userService.getUserByEmail(userLoginDTO.getEmail())
@@ -109,9 +113,11 @@ public class UserController {
                 logger.warn("Login failed: User not found with email: {}", userLoginDTO.getEmail());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "error", "Login failed",
-                    "message", "User not found"
+                    "message", "Invalid email or password"
                 ));
             }
+
+            logger.info("User found. Email verified: {}, Account enabled: {}", user.isEmailVerified(), user.isEnabled());
 
             // First check email verification
             if (!user.isEmailVerified()) {
@@ -129,45 +135,51 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of(
                                 "error", "Account disabled",
-                                "message", "Your account is disabled. Please contact to your library adminstrator."));
+                                "message", "Your account is disabled. Please contact your library administrator."));
             }
 
             logger.info("User found in database. Attempting authentication...");
-            logger.debug("Raw password from request: {}", userLoginDTO.getPassword());
-            logger.debug("Stored password hash: {}", user.getPassword());
-
+            
             // Test password match directly before authentication
             boolean passwordMatches = passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword());
-            logger.debug("Direct password match test before authentication: {}", passwordMatches);
+            logger.info("Direct password match test before authentication: {}", passwordMatches);
 
-            Authentication authentication = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(userLoginDTO.getEmail(), userLoginDTO.getPassword()));
+            try {
+                Authentication authentication = authManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(userLoginDTO.getEmail(), userLoginDTO.getPassword()));
 
-            if (authentication.isAuthenticated()) {
-                logger.info("Authentication successful for user: {}", userLoginDTO.getEmail());
+                if (authentication.isAuthenticated()) {
+                    logger.info("Authentication successful for user: {}", userLoginDTO.getEmail());
 
-                String token = jwtService.generateToken(userLoginDTO.getEmail());
-                logger.info("JWT Token {}", token);
-                LoginResponseDTO response = new LoginResponseDTO(
-                        token,
-                        user.getEmail(),
-                        user.getName(),
-                        user.getRoleList(),
-                        user.getId());
-                return ResponseEntity.ok(response);
+                    String token = jwtService.generateToken(userLoginDTO.getEmail());
+                    LoginResponseDTO response = new LoginResponseDTO(
+                            token,
+                            user.getEmail(),
+                            user.getName(),
+                            user.getRoleList(),
+                            user.getId());
+                    return ResponseEntity.ok(response);
+                }
+                
+                logger.warn("Authentication failed despite no exception");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of(
+                                "error", "Login failed",
+                                "message", "Invalid email or password"));
+                                
+            } catch (BadCredentialsException e) {
+                logger.error("Bad credentials for user: {} - {}", userLoginDTO.getEmail(), e.getMessage());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of(
+                                "error", "Login failed",
+                                "message", "Invalid email or password"));
             }
-            logger.warn("Authentication failed despite no exception");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed");
-        } catch (BadCredentialsException e) {
-            logger.error("Bad credentials for user: {}", userLoginDTO.getEmail(), e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        } catch (Exception e) {
+            logger.error("Login failed for user: {} - {}", userLoginDTO.getEmail(), e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of(
                             "error", "Login failed",
-                            "message", "Invalid email or password"));
-        } catch (Exception e) {
-            logger.error("Login failed for user: {}", userLoginDTO.getEmail(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Login Failed");
+                            "message", "An unexpected error occurred"));
         }
     }
 
@@ -524,6 +536,98 @@ public class UserController {
         }
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            if (email == null) {
+                return ResponseEntity.badRequest().body("Email is required");
+            }
 
+            Optional<Users> userOpt = userService.getUserByEmail(email);
+            if (userOpt.isEmpty()) {
+                // For security reasons, don't reveal if email exists
+                return ResponseEntity.ok(Map.of(
+                    "message", "If your email is registered, you will receive password reset instructions"
+                ));
+            }
+
+            Users user = userOpt.get();
+            String resetToken = UUID.randomUUID().toString();
+            user.setPasswordResetToken(resetToken);
+            user.setPasswordResetExpiry(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)); // 24 hours
+            userService.saveUser(user);
+
+            String resetLink = emailHelper.getPasswordResetLink(resetToken, user.getId().toString());
+            mailService.sendPasswordResetEmail(user.getEmail(), user.getName(), resetLink);
+
+            return ResponseEntity.ok(Map.of(
+                "message", "If your email is registered, you will receive password reset instructions"
+            ));
+        } catch (Exception e) {
+            logger.error("Failed to process forgot password request", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to process request"));
+        }
+    }
+
+    @GetMapping("/reset-password")
+    public ResponseEntity<?> validateResetToken(
+            @RequestParam("userId") Long userId,
+            @RequestParam("token") String token) {
+        
+        Optional<Users> userOpt = userService.getUserById(userId.toString());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("Invalid reset link");
+        }
+
+        Users user = userOpt.get();
+        if (user.getPasswordResetToken() == null || 
+            !user.getPasswordResetToken().equals(token) ||
+            user.getPasswordResetExpiry().before(new Date())) {
+            return ResponseEntity.badRequest().body("Invalid or expired reset link");
+        }
+
+        return ResponseEntity.ok("Valid reset token");
+    }
+
+    @PostMapping("/reset-password/{userId}")
+    public ResponseEntity<?> resetPassword(
+            @PathVariable Long userId,
+            @RequestBody Map<String, String> request) {
+        try {
+            String token = request.get("token");
+            String newPassword = request.get("newPassword");
+
+            if (token == null || newPassword == null) {
+                return ResponseEntity.badRequest().body("Token and new password are required");
+            }
+
+            Optional<Users> userOpt = userService.getUserById(userId.toString());
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("Invalid reset link");
+            }
+
+            Users user = userOpt.get();
+            if (user.getPasswordResetToken() == null || 
+                !user.getPasswordResetToken().equals(token) ||
+                user.getPasswordResetExpiry().before(new Date())) {
+                return ResponseEntity.badRequest().body("Invalid or expired reset link");
+            }
+
+            user.setPassword(newPassword);
+            user.setPasswordResetToken(null);
+            user.setPasswordResetExpiry(null);
+            userService.saveUser(user);
+
+            return ResponseEntity.ok(Map.of(
+                "message", "Password reset successfully"
+            ));
+        } catch (Exception e) {
+            logger.error("Failed to reset password", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to reset password: " + e.getMessage());
+        }
+    }
 
 }

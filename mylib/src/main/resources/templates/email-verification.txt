@@ -16,7 +16,7 @@ Once verified, you'll have access to:
 
 If you did not create an account with [(${appName})], please disregard this email.
 
-If you have any questions or need assistance, please contact our support team at support@[(${domain})]
+If you have any questions or need assistance, please contact our support team at [(${domain})]
 
 Happy reading!
 

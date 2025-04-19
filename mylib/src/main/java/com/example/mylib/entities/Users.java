@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -44,6 +45,11 @@ public class Users {
     private String emailToken;
     private boolean emailVerified=false;
     private boolean phoneVerified=false;
+
+    private String passwordResetToken;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date passwordResetExpiry;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @ToString.Exclude

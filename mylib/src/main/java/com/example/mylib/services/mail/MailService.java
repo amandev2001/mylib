@@ -14,4 +14,6 @@ public interface MailService {
     void sendEmailWithAttachment();
 
     void sendVerificationEmail(String to, String name, String verificationLink);
+    
+    void sendPasswordResetEmail(String to, String name, String resetLink);
 }

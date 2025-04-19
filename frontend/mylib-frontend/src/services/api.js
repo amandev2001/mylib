@@ -1,7 +1,9 @@
 import axios from 'axios';
-import { authService } from './authService';
+import { authService, cookieOptions } from './authService';
 import { API_BASE_URL } from '../config';
+import Cookies from 'js-cookie';
 
+const TOKEN_KEY = "token";
 const BASE_URL = API_BASE_URL;
 console.log("Base URL:", BASE_URL); 
 
@@ -36,7 +38,9 @@ api.interceptors.request.use(
       '/api/users/login', 
       '/refresh-token',
       '/register',
-      '/api/users/register'
+      '/api/users/register',
+      '/api/users/forgot-password',
+      '/api/users/reset-password'
     ];
     
     if (!skipTokenUrls.includes(config.url)) {
@@ -60,7 +64,9 @@ api.interceptors.response.use(
     if (originalRequest.url === '/api/users/login' || 
         originalRequest.url === '/refresh-token' ||
         originalRequest.url === '/register' ||
-        originalRequest.url === '/api/users/register') {
+        originalRequest.url === '/api/users/register' ||
+        originalRequest.url === '/api/users/forgot-password' ||
+        originalRequest.url === '/api/users/reset-password') {
       return Promise.reject(error);
     }
 
@@ -80,9 +86,8 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const response = await authService.refreshToken();
-        const newToken = response.data.token;
-        authService.saveToken(newToken);
+        const newToken = await authService.refreshAuthToken();
+        Cookies.set(TOKEN_KEY, newToken, cookieOptions);
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
         processQueue(null, newToken);

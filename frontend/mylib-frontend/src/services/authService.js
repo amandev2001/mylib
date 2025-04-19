@@ -9,7 +9,7 @@ const USER_DATA_KEY = "user_data";
 const isLocalhost = window.location.hostname === "localhost";
 
 // Cookie options
-const cookieOptions = {
+export const cookieOptions = {
   expires: 7,
   secure: !isLocalhost, // secure: false on localhost, true otherwise
   sameSite: isLocalhost ? "Lax" : "None", // SameSite None for cross-site cookies
@@ -136,6 +136,24 @@ export const authService = {
   resetPassword: async (email, newPassword) => {
     const response = await api.post("/api/users/admin/reset-password", {
       email,
+      newPassword,
+    });
+    return response.data;
+  },
+
+  forgotPassword: async (email) => {
+    const response = await api.post("/api/users/forgot-password", { email });
+    return response.data;
+  },
+
+  validateResetToken: async (userId, token) => {
+    const response = await api.get(`/api/users/reset-password?userId=${userId}&token=${token}`);
+    return response.data;
+  },
+
+  resetPasswordWithToken: async (userId, token, newPassword) => {
+    const response = await api.post(`/api/users/reset-password/${userId}`, {
+      token,
       newPassword,
     });
     return response.data;

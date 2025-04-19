@@ -58,6 +58,7 @@ public class EmailServiceImpl implements MailService {
         helper.setText(htmlContent, true);
         
         eMailSender.send(message);
+        logger.info("Email send successfully ,{}",subject);
     }
 
     @Override
@@ -88,6 +89,41 @@ public class EmailServiceImpl implements MailService {
                 logger.error("Failed to send plain text email to {}: {}", to, fallbackError.getMessage());
                 // If both HTML and text template fail, throw the original error
                 throw new RuntimeException("Failed to send verification email", e);
+            }
+        }
+    }
+
+    @Override
+    public void sendPasswordResetEmail(String to, String name, String resetLink) {
+        logger.info("Sending password reset email to {} with reset link {}", to, resetLink);
+        String subject = "Reset Your Password for " + APP_NAME;
+
+        Context context = new Context();
+        context.setVariable("name", name);
+        context.setVariable("resetLink", resetLink);
+        context.setVariable("appName", APP_NAME);
+        context.setVariable("domain", domainName);
+
+        try {
+            sendEmailWithHtml(to, subject, "password-reset", context);
+        } catch (MessagingException e) {
+            logger.error("Failed to send HTML password reset email to {}: {}", to, e.getMessage());
+            try {
+                // Fallback to plain text
+                String plainTextContent = String.format(
+                    "Hello %s,\n\n" +
+                    "We received a request to reset your password for your %s account.\n" +
+                    "Click the following link to reset your password:\n\n%s\n\n" +
+                    "This link will expire in 24 hours.\n\n" +
+                    "If you did not request this, please ignore this email.\n\n" +
+                    "Best regards,\n" +
+                    "The %s Team",
+                    name, APP_NAME, resetLink, APP_NAME
+                );
+                sendEmail(to, subject, plainTextContent);
+            } catch (Exception fallbackError) {
+                logger.error("Failed to send plain text password reset email to {}: {}", to, fallbackError.getMessage());
+                throw new RuntimeException("Failed to send password reset email", e);
             }
         }
     }
