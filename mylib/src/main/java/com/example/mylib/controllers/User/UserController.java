@@ -107,22 +107,29 @@ public class UserController {
 
             if (user == null) {
                 logger.warn("Login failed: User not found with email: {}", userLoginDTO.getEmail());
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed: User not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error", "Login failed",
+                    "message", "User not found"
+                ));
             }
 
-            // Check if account is enabled
+            // First check email verification
+            if (!user.isEmailVerified()) {
+                logger.warn("Login failed: Email is not verified for {}", userLoginDTO.getEmail());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of(
+                                "error", "Email not verified",
+                                "message", "Please verify your email. Check your inbox for the verification link.",
+                                "userId", user.getId()));
+            }
+
+            // Then check if account is enabled
             if (!user.isEnabled()) {
                 logger.warn("Login failed: Account is disabled for email: {}", userLoginDTO.getEmail());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of(
-                                "error", "Account is disabled",
-                                "message", "Please enable your account or contact an administrator"));
-            } else if (!user.isEmailVerified()) {
-                logger.warn("Login failed: Email is not verified  {}", userLoginDTO.getEmail());
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of(
-                                "error", "Email is not verified.",
-                                "message", "Please verify your email click on the verification link to verify."));
+                                "error", "Account disabled",
+                                "message", "Your account is disabled. Please contact to your library adminstrator."));
             }
 
             logger.info("User found in database. Attempting authentication...");

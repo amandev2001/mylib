@@ -25,7 +25,7 @@ const DEFAULT_PROFILE = '/images/default.png';
 
 function Header() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
+  const { toggleSidebar } = useSidebar();
   const { currentUser, userRoles } = useUser();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const isAuthenticated = authService.isAuthenticated();
@@ -36,13 +36,13 @@ function Header() {
     window.location.href = '/login';
   };
 
-  const handleClickOutside = (event) => {
-    if (isProfileMenuOpen && !event.target.closest('.profile-menu')) {
-      setIsProfileMenuOpen(false);
-    }
-  };
-
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isProfileMenuOpen && !event.target.closest('.profile-menu')) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
     document.addEventListener('click', handleClickOutside);
     return () => {
       document.removeEventListener('click', handleClickOutside);
@@ -104,16 +104,17 @@ function Header() {
             {isAuthenticated ? (
               <div className="relative profile-menu">
                 <button
-                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsProfileMenuOpen(!isProfileMenuOpen);
+                  }}
                   className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <img
-                    src={`${currentUser?.profilePic}` || DEFAULT_PROFILE}
+                    src={currentUser?.profilePic || DEFAULT_PROFILE}
                     alt="user profile pic"
                     className="w-8 h-8 rounded-full object-cover"
                   />
-                  {/* <UserCircleIcon className="h-6 w-6" />
-                  <span className="hidden md:block">{currentUser?.name || 'My Account'}</span> */}
                 </button>
 
                 {/* Dropdown Menu */}
@@ -143,6 +144,13 @@ function Header() {
                       >
                         <BookOpenIcon className="h-5 w-5 mr-3" />
                         Books
+                      </Link>
+                      <Link
+                        to="/my-borrows"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <BookmarkIcon className="h-5 w-5 mr-3" />
+                        My Borrows
                       </Link>
                       <Link
                         to="/profile"

@@ -103,11 +103,15 @@ public class UserServiceImpl implements UserService {
         user.setRoleList(userRegistrationDto.getRoleList());
         user.setEnabled(false);
         user.setEmailToken(emailToken);
+        
+        // Set DiceBear avatar URL using email as seed for consistency
+        String avatarUrl = "https://api.dicebear.com/7.x/bottts/svg?seed=" + userRegistrationDto.getEmail();
+        user.setProfilePic(avatarUrl);
 
-        // ✅ Save the user first to get the generated ID
+        // Save the user first to get the generated ID
         Users savedUser = saveUser(user);
 
-        // ✅ Now getId() will not be null
+        // Now getId() will not be null
         String verifyLink = emailHelper.getLinkForAuthentication(emailToken, savedUser.getId().toString());
         mailService.sendVerificationEmail(savedUser.getEmail(), subject, verifyLink);
 

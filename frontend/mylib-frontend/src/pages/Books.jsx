@@ -73,7 +73,7 @@ function Books() {
       // console.log('Current token:', token);
       
       const data = await bookService.getAllBooks();
-      console.log('Book data structure:', data[0]); // Log first book to see structureure
+      // console.log('Book data structure:', data[0]); // Log first book to see structureure
       setBooks(data);
       setError(null);
     } catch (err) {

@@ -15,7 +15,21 @@ function Login() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
+
+  const handleResendVerification = async () => {
+    try {
+      setResendLoading(true);
+      await authService.resendVerificationEmail(userId);
+      setError("Verification email has been resent. Please check your inbox.");
+    } catch (err) {
+      setError("Failed to resend verification email. Please try again.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,12 +43,22 @@ function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    setUserId(null);
 
     try {
       await authService.login(credentials);
-      navigate("/books"); // Redirect to dashboard after successful login
+      navigate("/books");
     } catch (err) {
-      const errorMessage = err.response || "Failed to login. Please try again.";
+      if (err.response?.status === 403 && err.response?.data?.error === "Email not verified") {
+        // Extract userId from error response if available
+        const userId = err.response?.data?.userId;
+        if (userId) {
+          setUserId(userId);
+        }
+      }
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error ||
+                          "Failed to login. Please try again.";
       setError(errorMessage);
       console.error("Login error:", err);
     } finally {
@@ -142,7 +166,18 @@ function Login() {
                     : "bg-red-50 text-red-700"
                 }`}
               >
-                {error}
+                <p>{error}</p>
+                {userId && error.includes("verify your email") && (
+                  <button
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className={`mt-2 text-sm underline hover:no-underline ${
+                      isDarkMode ? "text-red-200" : "text-red-800"
+                    }`}
+                  >
+                    {resendLoading ? "Sending..." : "Resend verification email"}
+                  </button>
+                )}
               </div>
             )}
 

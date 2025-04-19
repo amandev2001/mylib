@@ -15,6 +15,8 @@ import { authService } from "../services/authService";
 import { APP_NAME } from "../config";
 import { memberService } from "../services/memberService";
 
+const DEFAULT_PROFILE = '/images/default.png';
+
 function PublicNavbar({ isDarkMode }) {
   const { toggleDarkMode } = useDarkMode();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);

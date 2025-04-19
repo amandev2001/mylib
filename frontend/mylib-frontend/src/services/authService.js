@@ -22,7 +22,6 @@ export const authService = {
     try {
       console.group("LOGIN");
       const response = await api.post("/api/users/login", credentials);
-      // console.log(response.data);
 
       if (response.data) {
         const { token, roles, email, name, userId } = response.data;
@@ -31,6 +30,7 @@ export const authService = {
         Cookies.set(TOKEN_KEY, token, cookieOptions);
         Cookies.set(USER_ROLES_KEY, JSON.stringify(roles), cookieOptions);
 
+        // Set token in axios defaults
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         cachedRoles = roles;
 
@@ -43,7 +43,10 @@ export const authService = {
 
       throw new Error("No data received from login");
     } catch (error) {
-      authService.logout();
+      // Don't log out on 403 errors (forbidden - like email not verified)
+      if (error.response?.status !== 403) {
+        authService.logout();
+      }
       throw error;
     }
   },
@@ -137,4 +140,9 @@ export const authService = {
     });
     return response.data;
   },
+
+  resendVerificationEmail: async (userId) => {
+    const response = await api.post(`/api/users/resend/${userId}`);
+    return response.data;
+  }
 };
