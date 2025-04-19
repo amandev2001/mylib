@@ -119,6 +119,8 @@ public class UserController {
 
             logger.info("User found. Email verified: {}, Account enabled: {}", user.isEmailVerified(), user.isEnabled());
 
+            logger.warn("User email verification status:{}",user.isEmailVerified());
+
             // First check email verification
             if (!user.isEmailVerified()) {
                 logger.warn("Login failed: Email is not verified for {}", userLoginDTO.getEmail());
