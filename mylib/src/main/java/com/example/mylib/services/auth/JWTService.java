@@ -36,10 +36,10 @@ public class JWTService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
-    @PostConstruct
-    public void checkSecret() {
-        logger.info("Loaded Jwt secret {}", jwtSecret);
-    }
+    // @PostConstruct
+    // public void checkSecret() {
+    //     logger.info("Loaded Jwt secret {}", jwtSecret);
+    // }
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
