@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk-focal as builder
+FROM eclipse-temurin:21-jdk-jammy as builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY src src
 RUN chmod +x ./mvnw
 RUN ./mvnw clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-focal
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
