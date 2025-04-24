@@ -16,9 +16,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { memberService } from '../services/memberService';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useSidebar } from '../context/SidebarContext';
-import { useUser } from '../context/UserContext';
 import { APP_NAME } from "../config";
 
 const DEFAULT_PROFILE = '/images/default.png';
@@ -26,9 +26,37 @@ const DEFAULT_PROFILE = '/images/default.png';
 function Header() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const { toggleSidebar } = useSidebar();
-  const { currentUser, userRoles } = useUser();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userRoles, setUserRoles] = useState([]);
   const isAuthenticated = authService.isAuthenticated();
+  
+  // Fetch user data directly in the component
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (isAuthenticated) {
+        try {
+          const user = await memberService.getCurrentMember();
+          setCurrentUser(user);
+          
+          // Format roles similar to PublicNavbar
+          if (user?.roleList) {
+            const formattedRoles = user.roleList.map(
+              (role) =>
+                role.replace("ROLE_", "").charAt(0).toUpperCase() +
+                role.replace("ROLE_", "").slice(1).toLowerCase()
+            );
+            setUserRoles(formattedRoles);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, [isAuthenticated]);
+
   const isAdmin = currentUser?.roleList?.some(role => role === 'ROLE_ADMIN');
 
   const handleLogout = () => {
@@ -93,12 +121,6 @@ function Header() {
                 <MoonIcon className="h-5 w-5" />
               )}
             </button>
-
-            {/* Notifications
-            <button className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 relative">
-              <BellIcon className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-            </button> */}
 
             {/* User Menu */}
             {isAuthenticated ? (
@@ -168,36 +190,6 @@ function Header() {
                           Loan Management
                         </Link>
                       )}
-                      {/* <Link
-                        to="/my-borrows"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <BookOpenIcon className="h-5 w-5 mr-3" />
-                        My Borrowed Books
-                      </Link> */}
-                      {/* <Link
-                        to="/reading-list"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <BookmarkIcon className="h-5 w-5 mr-3" />
-                        Reading List
-                      </Link> */}
-                      {/* <Link
-                        to="/history"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <ClipboardDocumentListIcon className="h-5 w-5 mr-3" />
-                        Borrow History
-                      </Link> */}
-                      {/* {isAdmin && (
-                        <Link
-                          to="/admin"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <ShieldCheckIcon className="h-5 w-5 mr-3" />
-                          Admin Dashboard
-                        </Link>
-                      )} */}
                       <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                       <button
                         onClick={handleLogout}
