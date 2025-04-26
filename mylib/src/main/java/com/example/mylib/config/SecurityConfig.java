@@ -61,8 +61,8 @@ public class SecurityConfig {
                                 "/api/users/verify-password",
                                 "/api/users/test-password",
                                 "/api/users/forgot-password",
-                                "/reset-password",
-                                "/api/users/admin/reset-password",
+                                "/reset-password/**",
+                                "/api/users/admin/reset-password/**",
                                 "/api/users/verify",
                                 "/api/users/resend/*",
                                 "/actuator/**",  // Allow actuator endpoints
