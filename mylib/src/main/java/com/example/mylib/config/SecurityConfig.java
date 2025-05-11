@@ -54,30 +54,30 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/health",  // Health check endpoint
+                                "/api/health", // Health check endpoint
                                 "/api/users/login",
-                                "/register",  // Add this line for registration
-                                "/api/users/register",  // And this one for consistency
+                                "/register", // Add this line for registration
+                                "/api/users/register", // And this one for consistency
                                 "/api/users/verify-password",
                                 "/api/users/test-password",
-                                "/api/users/forgot-password",
-                                "/reset-password/**",
+                                "/api/users/forgot-password/**",
+                                "/api/users/reset-password",
+                                "/api/users/reset-password/**",
+                                "/reset-password",
                                 "/api/users/admin/reset-password/**",
                                 "/api/users/verify",
                                 "/api/users/resend/*",
-                                "/actuator/**",  // Allow actuator endpoints
-                                "/actuator/health/**",  // Explicitly allow health endpoint
-                                "/actuator/info/**"     // Explicitly allow info endpoint
+                                "/actuator/**", // Allow actuator endpoints
+                                "/actuator/health/**", // Explicitly allow health endpoint
+                                "/actuator/info/**" // Explicitly allow info endpoint
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .accessDeniedHandler(accessDeniedHandler)
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                )
+                        .authenticationEntryPoint(authenticationEntryPoint))
                 .build();
     }
 
@@ -89,14 +89,13 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(origins));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization", 
-            "Content-Type", 
-            "X-Requested-With",
-            "Accept",
-            "Origin",
-            "Access-Control-Request-Method",
-            "Access-Control-Request-Headers"
-        ));
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);

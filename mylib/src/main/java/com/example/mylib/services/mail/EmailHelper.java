@@ -21,7 +21,7 @@ public class EmailHelper {
     }
 
     public String getPasswordResetLink(String resetToken, String userId) {
-        return baseUrl + "/reset-password?userId=" + userId + "&token=" + resetToken;
+        return baseUrl + "/api/users/reset-password?userId=" + userId + "&token=" + resetToken;
     }
 }
 
