@@ -66,7 +66,7 @@ public class SecurityConfig {
                                 "/reset-password",
                                 "/api/users/admin/reset-password/**",
                                 "/api/users/verify",
-                                "/api/users/resend/*",
+                                "/api/users/resend/*"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
